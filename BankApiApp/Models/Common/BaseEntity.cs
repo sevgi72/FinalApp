@@ -1,6 +1,8 @@
 ﻿namespace BankApiApp.Models.Common
 {
-    public class BaseEntity
+    public abstract class BaseEntity
     {
+        public Guid Id { get; set; }
     }
+
 }
