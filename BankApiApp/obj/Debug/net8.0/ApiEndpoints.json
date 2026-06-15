@@ -1,5 +1,47 @@
 [
   {
+    "ContainingType": "BankApiApp.Controllers.AccountController",
+    "Method": "Create",
+    "RelativePath": "api/Account",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.Account.CreateAccountDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.AccountController",
+    "Method": "GetById",
+    "RelativePath": "api/Account/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.AccountController",
+    "Method": "GetMyAccounts",
+    "RelativePath": "api/Account/my",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BankApiApp.Controllers.AuthController",
     "Method": "Login",
     "RelativePath": "api/Auth/login",

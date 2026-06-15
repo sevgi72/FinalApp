@@ -13,7 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 // DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.AddAutoMapper(cfg => { }, typeof(Program));
+builder.Services.AddScoped<IAccountService, AccountService>();
 // Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {

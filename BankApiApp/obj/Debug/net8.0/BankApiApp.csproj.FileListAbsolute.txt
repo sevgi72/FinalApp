@@ -115,4 +115,10 @@ C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Swashbuckle.
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\obj\Debug\net8.0\BankApiApp.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\AutoMapper.dll
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Microsoft.Extensions.Options.dll
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Microsoft.Extensions.Primitives.dll
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\System.Diagnostics.DiagnosticSource.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
