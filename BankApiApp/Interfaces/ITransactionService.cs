@@ -7,4 +7,5 @@ public interface ITransactionService
     Task<TransactionDto> DepositAsync(string userId, DepositDto dto);
     Task<TransactionDto> WithdrawAsync(string userId, WithdrawDto dto);
     Task<TransactionDto> TransferAsync(string userId, TransferDto dto);
+    Task<List<TransactionDto>> GetAccountTransactionsAsync(string userId, Guid accountId);
 }

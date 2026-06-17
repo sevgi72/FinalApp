@@ -32,4 +32,9 @@ public class TransactionController : ControllerBase
 
     private string GetUserId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+
+    [HttpGet("account/{accountId}")]
+    public async Task<IActionResult> GetAccountTransactions(Guid accountId)
+    => Ok(await _transactionService.GetAccountTransactionsAsync(GetUserId(), accountId));
 }

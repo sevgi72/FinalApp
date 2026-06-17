@@ -127,4 +127,21 @@ public class TransactionService : ITransactionService
 
         return account;
     }
+    public async Task<List<TransactionDto>> GetAccountTransactionsAsync(string userId, Guid accountId)
+    {
+        // hesab istifadəçiyə aiddir? (təhlükəsizlik)
+        var account = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId);
+
+        if (account == null)
+            throw new Exception("Hesab tapılmadı.");
+
+        // bu hesabın həm göndərdiyi, həm aldığı əməliyyatlar
+        var transactions = await _context.Transactions
+            .Where(t => t.FromAccountId == accountId || t.ToAccountId == accountId)
+            .OrderByDescending(t => t.CreatedAt)   // ən yeni yuxarıda
+            .ToListAsync();
+
+        return _mapper.Map<List<TransactionDto>>(transactions);
+    }
 }
