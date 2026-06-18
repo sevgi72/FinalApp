@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BankApiApp.DTOs.Account;
+using BankApiApp.DTOs.Loan;
 using BankApiApp.DTOs.Transaction;
 using BankApiApp.Models;
 
@@ -16,5 +17,10 @@ public class MapperProfile : Profile
         CreateMap<Transaction, TransactionDto>()
     .ForMember(d => d.Type, o => o.MapFrom(s => s.Type.ToString()))
     .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()));
+
+
+        CreateMap<Loan, LoanDto>()
+    .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()));
+        CreateMap<LoanPayment, LoanPaymentDto>();
     }
 }

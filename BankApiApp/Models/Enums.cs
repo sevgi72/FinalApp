@@ -26,4 +26,11 @@
         Completed = 2,
         Failed = 3
     }
+    public enum LoanStatus
+    {
+        Pending = 1,    // müraciət edilib, admin təsdiqini gözləyir
+        Active = 2,     // təsdiqlənib, ödənilir
+        Rejected = 3,   // rədd edilib
+        Completed = 4   // tam ödənilib, bitdi
+    }
 }

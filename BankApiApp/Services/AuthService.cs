@@ -36,7 +36,9 @@ public class AuthService : IAuthService
         if (!result.Succeeded)
             throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
 
-        return GenerateToken(user);
+        await _userManager.AddToRoleAsync(user, "Customer");   // ← default rol
+
+        return await GenerateTokenAsync(user);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
@@ -49,20 +51,23 @@ public class AuthService : IAuthService
         if (!valid)
             throw new Exception("Email və ya parol yanlışdır.");
 
-        return GenerateToken(user);
+        return await GenerateTokenAsync(user);
     }
 
-    private AuthResponseDto GenerateToken(ApplicationUser user)
+    private async Task<AuthResponseDto> GenerateTokenAsync(ApplicationUser user)
     {
+        var roles = await _userManager.GetRolesAsync(user);   // ← istifadəçinin rolları
+
         var expiryMinutes = int.Parse(_config["Jwt:ExpiryMinutes"]!);
         var expires = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
         var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id),
-            new(ClaimTypes.Email, user.Email!),
-            new(ClaimTypes.Name, user.FullName)
-        };
+    {
+        new(ClaimTypes.NameIdentifier, user.Id),
+        new(ClaimTypes.Email, user.Email!),
+        new(ClaimTypes.Name, user.FullName)
+    };
+        claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));  // ← rollar claim kimi
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
