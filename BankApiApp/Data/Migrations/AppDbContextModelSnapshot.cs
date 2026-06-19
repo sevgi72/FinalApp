@@ -254,6 +254,41 @@ namespace BankApiApp.Data.Migrations
                     b.ToTable("LoanPayments");
                 });
 
+            modelBuilder.Entity("BankApiApp.Models.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("BankApiApp.Models.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -472,6 +507,17 @@ namespace BankApiApp.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Loan");
+                });
+
+            modelBuilder.Entity("BankApiApp.Models.RefreshToken", b =>
+                {
+                    b.HasOne("BankApiApp.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("BankApiApp.Models.Transaction", b =>

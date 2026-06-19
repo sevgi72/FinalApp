@@ -9,4 +9,5 @@ public interface ILoanService
     Task<List<LoanDto>> GetPendingLoansAsync();
     Task<LoanDto> ApproveLoanAsync(Guid loanId);
     Task<LoanDto> RejectLoanAsync(Guid loanId);
+    Task ProcessDuePaymentsAsync();
 }

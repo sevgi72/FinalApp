@@ -1,9 +1,12 @@
-﻿using BankApiApp.DTOs.Auth;
+﻿using BankApiApp.Data;
+using BankApiApp.DTOs.Auth;
 using BankApiApp.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace BankApiApp.Services;
@@ -12,11 +15,16 @@ public class AuthService : IAuthService
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _config;
+    private readonly AppDbContext _context;
 
-    public AuthService(UserManager<ApplicationUser> userManager, IConfiguration config)
+    public AuthService(
+        UserManager<ApplicationUser> userManager,
+        IConfiguration config,
+        AppDbContext context)
     {
         _userManager = userManager;
         _config = config;
+        _context = context;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
@@ -36,9 +44,9 @@ public class AuthService : IAuthService
         if (!result.Succeeded)
             throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
 
-        await _userManager.AddToRoleAsync(user, "Customer");   // ← default rol
+        await _userManager.AddToRoleAsync(user, "Customer");
 
-        return await GenerateTokenAsync(user);
+        return await BuildAuthResponseAsync(user);
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
@@ -51,23 +59,66 @@ public class AuthService : IAuthService
         if (!valid)
             throw new Exception("Email və ya parol yanlışdır.");
 
-        return await GenerateTokenAsync(user);
+        return await BuildAuthResponseAsync(user);
     }
 
-    private async Task<AuthResponseDto> GenerateTokenAsync(ApplicationUser user)
+    public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto)
     {
-        var roles = await _userManager.GetRolesAsync(user);   // ← istifadəçinin rolları
+        var stored = await _context.RefreshTokens
+            .Include(rt => rt.User)
+            .FirstOrDefaultAsync(rt => rt.Token == dto.RefreshToken);
 
+        if (stored == null || stored.IsRevoked || stored.ExpiresAt < DateTime.UtcNow)
+            throw new Exception("Refresh token etibarsızdır və ya vaxtı bitib.");
+
+        // köhnə refresh token-i ləğv et (rotation)
+        stored.IsRevoked = true;
+        await _context.SaveChangesAsync();
+
+        // yeni access + refresh token ver
+        return await BuildAuthResponseAsync(stored.User);
+    }
+
+    // --- köməkçi metodlar ---
+
+    private async Task<AuthResponseDto> BuildAuthResponseAsync(ApplicationUser user)
+    {
+        var roles = await _userManager.GetRolesAsync(user);
         var expiryMinutes = int.Parse(_config["Jwt:ExpiryMinutes"]!);
         var expires = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
-        var claims = new List<Claim>
+        var accessToken = CreateAccessToken(user, roles, expires);
+        var refreshToken = GenerateRefreshToken();
+
+        // refresh token-i bazada saxla
+        _context.RefreshTokens.Add(new RefreshToken
+        {
+            Token = refreshToken,
+            UserId = user.Id,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            IsRevoked = false
+        });
+        await _context.SaveChangesAsync();
+
+        return new AuthResponseDto
+        {
+            Token = accessToken,
+            RefreshToken = refreshToken,
+            Email = user.Email!,
+            FullName = user.FullName,
+            ExpiresAt = expires
+        };
+    }
+
+    private string CreateAccessToken(ApplicationUser user, IList<string> roles, DateTime expires)
     {
-        new(ClaimTypes.NameIdentifier, user.Id),
-        new(ClaimTypes.Email, user.Email!),
-        new(ClaimTypes.Name, user.FullName)
-    };
-        claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));  // ← rollar claim kimi
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.Id),
+            new(ClaimTypes.Email, user.Email!),
+            new(ClaimTypes.Name, user.FullName)
+        };
+        claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -79,12 +130,14 @@ public class AuthService : IAuthService
             expires: expires,
             signingCredentials: creds);
 
-        return new AuthResponseDto
-        {
-            Token = new JwtSecurityTokenHandler().WriteToken(token),
-            Email = user.Email!,
-            FullName = user.FullName,
-            ExpiresAt = expires
-        };
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private string GenerateRefreshToken()
+    {
+        var bytes = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(bytes);
+        return Convert.ToBase64String(bytes);
     }
 }

@@ -151,4 +151,58 @@ public class LoanService : ILoanService
         await _context.SaveChangesAsync();
         return _mapper.Map<LoanDto>(loan);
     }
+
+    public async Task ProcessDuePaymentsAsync()
+    {
+        var now = DateTime.UtcNow;
+
+        // vaxtı çatmış, ödənilməmiş ödənişlər (aktiv kreditlər)
+        var duePayments = await _context.LoanPayments
+            .Include(p => p.Loan)
+                .ThenInclude(l => l.Account)
+            .Where(p => !p.IsPaid
+                        && p.DueDate <= now
+                        && p.Loan.Status == LoanStatus.Active)
+            .OrderBy(p => p.DueDate)
+            .ToListAsync();
+
+        foreach (var payment in duePayments)
+        {
+            var loan = payment.Loan;
+            var account = loan.Account;
+
+            // balans kifayət etmirsə bu dəfə keç (növbəti dövrdə yenidən cəhd)
+            if (account.Balance < payment.Amount)
+                continue;
+
+            await using var tx = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                account.Balance -= payment.Amount;
+                payment.IsPaid = true;
+                payment.PaidAt = now;
+                loan.RemainingBalance -= payment.Amount;
+
+                _context.Transactions.Add(new Transaction
+                {
+                    Amount = payment.Amount,
+                    Type = TransactionType.Withdraw,
+                    Status = TransactionStatus.Completed,
+                    FromAccountId = account.Id,
+                    Description = $"Kredit ödənişi #{payment.PaymentNumber}"
+                });
+
+                // bütün borc bitibsə kredit bağlanır
+                if (loan.RemainingBalance <= 0)
+                    loan.Status = LoanStatus.Completed;
+
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+            }
+        }
+    }
 }

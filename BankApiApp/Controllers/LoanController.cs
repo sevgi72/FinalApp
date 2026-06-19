@@ -37,4 +37,12 @@ public class LoanController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Reject(Guid id)
         => Ok(await _loanService.RejectLoanAsync(id));
+
+    [HttpPost("process-payments")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ProcessPayments()
+    {
+        await _loanService.ProcessDuePaymentsAsync();
+        return Ok(new { message = "Vaxtı çatmış ödənişlər işləndi." });
+    }
 }
