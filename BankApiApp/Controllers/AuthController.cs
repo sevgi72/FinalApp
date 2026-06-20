@@ -1,6 +1,8 @@
 ﻿using BankApiApp.DTOs.Auth;
 using BankApiApp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BankApiApp.Controllers;
 
@@ -32,4 +34,22 @@ public class AuthController : ControllerBase
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
     => Ok(await _authService.RefreshTokenAsync(dto));
+
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        await _authService.ChangePasswordAsync(userId, dto);
+        return Ok(new { message = "Parol uğurla dəyişdirildi." });
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout(RefreshTokenRequestDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        await _authService.LogoutAsync(userId, dto);
+        return Ok(new { message = "Çıxış edildi." });
+    }
 }

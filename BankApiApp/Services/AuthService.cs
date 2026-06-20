@@ -116,7 +116,8 @@ public class AuthService : IAuthService
         {
             new(ClaimTypes.NameIdentifier, user.Id),
             new(ClaimTypes.Email, user.Email!),
-            new(ClaimTypes.Name, user.FullName)
+            new(ClaimTypes.Name, user.FullName),
+            new("SecurityStamp", user.SecurityStamp ?? string.Empty)
         };
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
@@ -139,5 +140,38 @@ public class AuthService : IAuthService
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(bytes);
         return Convert.ToBase64String(bytes);
+    }
+
+    public async Task ChangePasswordAsync(string userId, ChangePasswordDto dto)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new Exception("İstifadəçi tapılmadı.");
+
+        // Identity köhnə parolu özü yoxlayır, yenisini hash-ləyir
+        var result = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
+        if (!result.Succeeded)
+            throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
+
+        // Təhlükəsizlik: bütün köhnə refresh token-ləri ləğv et (köhnə sessiyalar bitsin)
+        var tokens = await _context.RefreshTokens
+            .Where(rt => rt.UserId == userId && !rt.IsRevoked)
+            .ToListAsync();
+        foreach (var t in tokens)
+            t.IsRevoked = true;
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task LogoutAsync(string userId, RefreshTokenRequestDto dto)
+    {
+        var token = await _context.RefreshTokens
+            .FirstOrDefaultAsync(rt => rt.Token == dto.RefreshToken && rt.UserId == userId);
+
+        if (token != null && !token.IsRevoked)
+        {
+            token.IsRevoked = true;
+            await _context.SaveChangesAsync();
+        }
+        // token tapılmasa belə xəta vermirik — nəticə eynidir: sessiya bağlıdır
     }
 }

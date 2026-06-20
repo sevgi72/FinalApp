@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
 
 namespace BankApiApp.Extensions;
@@ -76,6 +77,25 @@ public static class ServiceRegistration
                     Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
                 ClockSkew = TimeSpan.Zero
             };
+
+            // ← yeni: hər sorğuda SecurityStamp yoxlanışı
+            options.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = async context =>
+                {
+                    var userManager = context.HttpContext.RequestServices
+                        .GetRequiredService<UserManager<ApplicationUser>>();
+
+                    var userId = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var tokenStamp = context.Principal?.FindFirst("SecurityStamp")?.Value;
+
+                    var user = userId == null ? null : await userManager.FindByIdAsync(userId);
+
+                    // user yoxdursa, ya da stamp uyğun gəlmirsə (parol dəyişib) → token rədd
+                    if (user == null || user.SecurityStamp != tokenStamp)
+                        context.Fail("Token etibarsızdır.");
+                }
+            };
         });
         return services;
     }
@@ -100,6 +120,8 @@ public static class ServiceRegistration
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<ILoanService, LoanService>();
+        services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<IAnalyticsService, AnalyticsService>();
         return services;
     }
 
