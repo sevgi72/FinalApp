@@ -174,4 +174,26 @@ public class AuthService : IAuthService
         }
         // token tapılmasa belə xəta vermirik — nəticə eynidir: sessiya bağlıdır
     }
+
+    public async Task<ProfileDto> GetProfileAsync(string userId)
+    {
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new Exception("İstifadəçi tapılmadı.");
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        var accounts = await _context.Accounts
+            .Where(a => a.OwnerId == userId)
+            .ToListAsync();
+
+        return new ProfileDto
+        {
+            Id = user.Id,
+            FullName = user.FullName,
+            Email = user.Email!,
+            Roles = roles,
+            AccountCount = accounts.Count,
+            TotalBalance = accounts.Sum(a => a.Balance)
+        };
+    }
 }

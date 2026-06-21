@@ -52,4 +52,13 @@ public class AuthController : ControllerBase
         await _authService.LogoutAsync(userId, dto);
         return Ok(new { message = "Çıxış edildi." });
     }
+
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _authService.GetProfileAsync(userId));
+    }
 }
