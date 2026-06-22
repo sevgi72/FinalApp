@@ -143,4 +143,3 @@ C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\sv\Hangfire.
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\tr-TR\Hangfire.Core.resources.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\zh-TW\Hangfire.Core.resources.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\zh\Hangfire.Core.resources.dll
-C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

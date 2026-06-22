@@ -68,7 +68,7 @@ namespace BankApiApp.Data.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Accounts");
+                    b.ToTable("Accounts", (string)null);
                 });
 
             modelBuilder.Entity("BankApiApp.Models.ApplicationUser", b =>
@@ -172,7 +172,7 @@ namespace BankApiApp.Data.Migrations
                     b.HasIndex("CardNumber")
                         .IsUnique();
 
-                    b.ToTable("Cards");
+                    b.ToTable("Cards", (string)null);
                 });
 
             modelBuilder.Entity("BankApiApp.Models.Loan", b =>
@@ -220,7 +220,7 @@ namespace BankApiApp.Data.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("Loans");
+                    b.ToTable("Loans", (string)null);
                 });
 
             modelBuilder.Entity("BankApiApp.Models.LoanPayment", b =>
@@ -251,7 +251,7 @@ namespace BankApiApp.Data.Migrations
 
                     b.HasIndex("LoanId");
 
-                    b.ToTable("LoanPayments");
+                    b.ToTable("LoanPayments", (string)null);
                 });
 
             modelBuilder.Entity("BankApiApp.Models.RefreshToken", b =>
@@ -286,7 +286,7 @@ namespace BankApiApp.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens");
+                    b.ToTable("RefreshTokens", (string)null);
                 });
 
             modelBuilder.Entity("BankApiApp.Models.Transaction", b =>
@@ -330,7 +330,7 @@ namespace BankApiApp.Data.Migrations
 
                     b.HasIndex("ToAccountId");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
