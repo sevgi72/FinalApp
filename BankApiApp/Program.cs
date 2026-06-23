@@ -3,6 +3,8 @@ using BankApiApp.Extensions;
 using BankApiApp.Services;
 using Hangfire;
 
+
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
 // Bütün servis qeydiyyatları bir sətirdə

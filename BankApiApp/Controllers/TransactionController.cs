@@ -1,4 +1,5 @@
 ﻿using BankApiApp.DTOs.Transaction;
+using BankApiApp.DTOs.Transactions;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,4 +38,27 @@ public class TransactionController : ControllerBase
     [HttpGet("account/{accountId}")]
     public async Task<IActionResult> GetAccountTransactions(Guid accountId)
     => Ok(await _transactionService.GetAccountTransactionsAsync(GetUserId(), accountId));
+
+    [HttpPost("transfer-by-card")]
+    public async Task<IActionResult> TransferByCard(TransferByCardDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        await _transactionService.TransferByCardAsync(userId, dto);
+        return Ok(new { message = "Köçürmə uğurla tamamlandı." });
+    }
+
+    [HttpGet("{id}/receipt")]
+    public async Task<IActionResult> GetReceipt(Guid id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _transactionService.GetReceiptAsync(userId, id));
+    }
+
+    [HttpGet("{id}/receipt/pdf")]
+    public async Task<IActionResult> GetReceiptPdf(Guid id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var (pdf, fileName) = await _transactionService.GetReceiptPdfAsync(userId, id);
+        return File(pdf, "application/pdf", fileName);   // brauzer faylı endirir
+    }
 }

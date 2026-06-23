@@ -20,6 +20,7 @@ namespace BankApiApp.Data
         public DbSet<Loan> Loans => Set<Loan>();
         public DbSet<LoanPayment> LoanPayments => Set<LoanPayment>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<Payment> Payments => Set<Payment>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // VACİB: Identity cədvəllərini (Users, Roles və s.) qurur. Mütləq əvvəl çağırılır.

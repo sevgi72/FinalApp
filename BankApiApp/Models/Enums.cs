@@ -33,4 +33,16 @@
         Rejected = 3,   // rədd edilib
         Completed = 4   // tam ödənilib, bitdi
     }
+    public enum CardStatus
+    {
+        Active = 1,
+        Blocked = 2
+    }
+
+    public enum PaymentStatus
+    {
+        Pending = 1,
+        Completed = 2,
+        Failed = 3
+    }
 }

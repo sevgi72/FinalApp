@@ -23,6 +23,8 @@ namespace BankApiApp.Models
         public string OwnerId { get; set; } = string.Empty;
         public ApplicationUser Owner { get; set; } = null!;
 
+        public ICollection<Card> Cards { get; set; } = new List<Card>();
+
         //[Timestamp]
         //public uint RowVersion { get; set; }   concurrency ucn 
     }

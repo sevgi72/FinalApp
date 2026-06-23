@@ -122,6 +122,8 @@ public static class ServiceRegistration
         services.AddScoped<ILoanService, LoanService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
+        services.AddScoped<ICardService, CardService>();
+        services.AddScoped<IPaymentService, PaymentService>();
         return services;
     }
 

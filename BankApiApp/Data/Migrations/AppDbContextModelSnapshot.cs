@@ -68,7 +68,7 @@ namespace BankApiApp.Data.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Accounts", (string)null);
+                    b.ToTable("Accounts");
                 });
 
             modelBuilder.Entity("BankApiApp.Models.ApplicationUser", b =>
@@ -154,16 +154,31 @@ namespace BankApiApp.Data.Migrations
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("CardHolderName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("CardNumber")
                         .IsRequired()
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
 
-                    b.Property<DateTime>("ExpiryDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsBlocked")
-                        .HasColumnType("boolean");
+                    b.Property<int>("ExpiryMonth")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ExpiryYear")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -172,7 +187,7 @@ namespace BankApiApp.Data.Migrations
                     b.HasIndex("CardNumber")
                         .IsUnique();
 
-                    b.ToTable("Cards", (string)null);
+                    b.ToTable("Cards");
                 });
 
             modelBuilder.Entity("BankApiApp.Models.Loan", b =>
@@ -220,7 +235,7 @@ namespace BankApiApp.Data.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("Loans", (string)null);
+                    b.ToTable("Loans");
                 });
 
             modelBuilder.Entity("BankApiApp.Models.LoanPayment", b =>
@@ -251,7 +266,48 @@ namespace BankApiApp.Data.Migrations
 
                     b.HasIndex("LoanId");
 
-                    b.ToTable("LoanPayments", (string)null);
+                    b.ToTable("LoanPayments");
+                });
+
+            modelBuilder.Entity("BankApiApp.Models.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CardLast4")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("character varying(4)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("BankApiApp.Models.RefreshToken", b =>
@@ -286,7 +342,7 @@ namespace BankApiApp.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("BankApiApp.Models.Transaction", b =>
@@ -330,7 +386,7 @@ namespace BankApiApp.Data.Migrations
 
                     b.HasIndex("ToAccountId");
 
-                    b.ToTable("Transactions", (string)null);
+                    b.ToTable("Transactions");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -479,7 +535,7 @@ namespace BankApiApp.Data.Migrations
             modelBuilder.Entity("BankApiApp.Models.Card", b =>
                 {
                     b.HasOne("BankApiApp.Models.Account", "Account")
-                        .WithMany()
+                        .WithMany("Cards")
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -507,6 +563,17 @@ namespace BankApiApp.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Loan");
+                });
+
+            modelBuilder.Entity("BankApiApp.Models.Payment", b =>
+                {
+                    b.HasOne("BankApiApp.Models.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("BankApiApp.Models.RefreshToken", b =>
@@ -586,6 +653,11 @@ namespace BankApiApp.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("BankApiApp.Models.Account", b =>
+                {
+                    b.Navigation("Cards");
                 });
 
             modelBuilder.Entity("BankApiApp.Models.ApplicationUser", b =>

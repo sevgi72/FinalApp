@@ -1,4 +1,5 @@
 ﻿using BankApiApp.Data;
+using BankApiApp.DTOs.Acoount;
 using BankApiApp.DTOs.Auth;
 using BankApiApp.Models;
 using Microsoft.AspNetCore.Identity;

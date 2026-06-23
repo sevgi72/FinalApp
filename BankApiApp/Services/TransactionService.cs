@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BankApiApp.Data;
 using BankApiApp.DTOs.Transaction;
+using BankApiApp.DTOs.Transactions;
 using BankApiApp.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -143,5 +144,114 @@ public class TransactionService : ITransactionService
             .ToListAsync();
 
         return _mapper.Map<List<TransactionDto>>(transactions);
+    }
+
+    public async Task TransferByCardAsync(string userId, TransferByCardDto dto)
+    {
+        if (dto.Amount <= 0)
+            throw new Exception("Məbləğ sıfırdan böyük olmalıdır.");
+
+        // 1. Göndərənin hesabı + sahiblik
+        var fromAccount = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == dto.FromAccountId)
+            ?? throw new Exception("Göndərən hesab tapılmadı.");
+
+        if (fromAccount.OwnerId != userId)
+            throw new Exception("Bu hesab sizə aid deyil.");
+
+        // 2. Kart nömrəsindən alıcının kartını + bağlı hesabını tap
+        var cardNumber = (dto.ToCardNumber ?? string.Empty).Replace(" ", "");
+
+        var toCard = await _context.Cards
+            .Include(c => c.Account)
+            .FirstOrDefaultAsync(c => c.CardNumber == cardNumber)
+            ?? throw new Exception("Bu nömrə ilə kart tapılmadı.");
+
+        if (toCard.Status == CardStatus.Blocked)
+            throw new Exception("Alıcının kartı bloklanıb.");
+
+        var toAccount = toCard.Account;
+
+        // 3. Özünə köçürmə qadağası
+        if (toAccount.Id == fromAccount.Id)
+            throw new Exception("Eyni hesaba köçürmə edilə bilməz.");
+
+        // 4. Balans yoxlaması
+        if (fromAccount.Balance < dto.Amount)
+            throw new Exception("Balans kifayət deyil.");
+
+        // 5. Atomik köçürmə
+        await using var trx = await _context.Database.BeginTransactionAsync();
+
+        fromAccount.Balance -= dto.Amount;
+        toAccount.Balance += dto.Amount;
+
+        _context.Transactions.Add(new Transaction
+        {
+            Amount = dto.Amount,
+            Type = TransactionType.Transfer,
+            Status = TransactionStatus.Completed,
+            Description = dto.Description ?? $"Karta köçürmə (**** {cardNumber[^4..]})",
+            FromAccountId = fromAccount.Id,
+            ToAccountId = toAccount.Id
+        });
+
+        await _context.SaveChangesAsync();
+        await trx.CommitAsync();
+    }
+    public async Task<ReceiptDto> GetReceiptAsync(string userId, Guid transactionId)
+    {
+        var trx = await _context.Transactions
+            .FirstOrDefaultAsync(t => t.Id == transactionId)
+            ?? throw new Exception("Əməliyyat tapılmadı.");
+
+        // sahiblik: istifadəçi from və ya to hesabın sahibi olmalıdır
+        var myAccountIds = await _context.Accounts
+            .Where(a => a.OwnerId == userId)
+            .Select(a => a.Id)
+            .ToListAsync();
+
+        bool ownsFrom = trx.FromAccountId.HasValue && myAccountIds.Contains(trx.FromAccountId.Value);
+        bool ownsTo = trx.ToAccountId.HasValue && myAccountIds.Contains(trx.ToAccountId.Value);
+        if (!ownsFrom && !ownsTo)
+            throw new Exception("Bu əməliyyat sizə aid deyil.");
+
+        // göstərmək üçün hesab nömrələrini tap
+        string? fromNumber = null, toNumber = null;
+        if (trx.FromAccountId.HasValue)
+            fromNumber = await _context.Accounts
+                .Where(a => a.Id == trx.FromAccountId.Value)
+                .Select(a => a.AccountNumber).FirstOrDefaultAsync();
+        if (trx.ToAccountId.HasValue)
+            toNumber = await _context.Accounts
+                .Where(a => a.Id == trx.ToAccountId.Value)
+                .Select(a => a.AccountNumber).FirstOrDefaultAsync();
+
+        return new ReceiptDto
+        {
+            Reference = "TRX-" + trx.Id.ToString("N")[..12].ToUpper(),
+            Date = trx.CreatedAt,
+            Type = trx.Type.ToString(),
+            Status = trx.Status.ToString(),
+            Amount = trx.Amount,
+            FromAccount = MaskAccount(fromNumber),
+            ToAccount = MaskAccount(toNumber),
+            Description = trx.Description
+        };
+    }
+
+    public async Task<(byte[] Pdf, string FileName)> GetReceiptPdfAsync(string userId, Guid transactionId)
+    {
+        var receipt = await GetReceiptAsync(userId, transactionId);
+        var pdf = ReceiptPdfGenerator.Generate(receipt);
+        var fileName = $"qebz-{receipt.Reference}.pdf";
+        return (pdf, fileName);
+    }
+
+    // hesab nömrəsini maskala (son 4 rəqəm)
+    private static string? MaskAccount(string? accountNumber)
+    {
+        if (string.IsNullOrEmpty(accountNumber)) return null;
+        return accountNumber.Length <= 4 ? accountNumber : "**** " + accountNumber[^4..];
     }
 }
