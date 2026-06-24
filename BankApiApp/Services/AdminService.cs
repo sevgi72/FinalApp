@@ -1,4 +1,5 @@
 ﻿using BankApiApp.DTOs.Admin;
+using BankApiApp.Exceptions;
 using BankApiApp.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -40,26 +41,26 @@ public class AdminService : IAdminService
     public async Task AssignRoleAsync(string userId, string role)
     {
         var user = await _userManager.FindByIdAsync(userId)
-            ?? throw new Exception("İstifadəçi tapılmadı.");
+            ?? throw new NotFoundException("İstifadəçi tapılmadı.");
 
         if (!await _roleManager.RoleExistsAsync(role))
-            throw new Exception($"'{role}' adlı rol mövcud deyil.");
+            throw new NotFoundException($"'{role}' adlı rol mövcud deyil.");
 
         if (await _userManager.IsInRoleAsync(user, role))
-            throw new Exception("İstifadəçi artıq bu roldadır.");
+            throw new BadRequestException("İstifadəçi artıq bu roldadır.");
 
         var result = await _userManager.AddToRoleAsync(user, role);
         if (!result.Succeeded)
-            throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
+            throw new BadRequestException(string.Join("; ", result.Errors.Select(e => e.Description)));
     }
 
     public async Task RemoveRoleAsync(string userId, string role)
     {
         var user = await _userManager.FindByIdAsync(userId)
-            ?? throw new Exception("İstifadəçi tapılmadı.");
+            ?? throw new NotFoundException("İstifadəçi tapılmadı.");
 
         var result = await _userManager.RemoveFromRoleAsync(user, role);
         if (!result.Succeeded)
-            throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
+            throw new BadRequestException(string.Join("; ", result.Errors.Select(e => e.Description)));
     }
 }

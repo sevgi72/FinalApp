@@ -1,4 +1,5 @@
-﻿using BankApiApp.DTOs.Transaction;
+﻿using BankApiApp.DTOs.Common;
+using BankApiApp.DTOs.Transaction;
 using BankApiApp.DTOs.Transactions;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -21,23 +22,32 @@ public class TransactionController : ControllerBase
 
     [HttpPost("deposit")]
     public async Task<IActionResult> Deposit(DepositDto dto)
-        => Ok(await _transactionService.DepositAsync(GetUserId(), dto));
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _transactionService.DepositAsync(userId, dto));
+    }
 
     [HttpPost("withdraw")]
     public async Task<IActionResult> Withdraw(WithdrawDto dto)
-        => Ok(await _transactionService.WithdrawAsync(GetUserId(), dto));
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _transactionService.WithdrawAsync(userId, dto));
+    }
 
     [HttpPost("transfer")]
     public async Task<IActionResult> Transfer(TransferDto dto)
-        => Ok(await _transactionService.TransferAsync(GetUserId(), dto));
-
-    private string GetUserId() =>
-        User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _transactionService.TransferAsync(userId, dto));
+    }
 
     [HttpGet("account/{accountId}")]
-    public async Task<IActionResult> GetAccountTransactions(Guid accountId)
-    => Ok(await _transactionService.GetAccountTransactionsAsync(GetUserId(), accountId));
+    public async Task<IActionResult> GetAccountTransactions(
+        Guid accountId, [FromQuery] PaginationParams pagination)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _transactionService.GetAccountTransactionsAsync(userId, accountId, pagination));
+    }
 
     [HttpPost("transfer-by-card")]
     public async Task<IActionResult> TransferByCard(TransferByCardDto dto)
@@ -59,6 +69,6 @@ public class TransactionController : ControllerBase
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var (pdf, fileName) = await _transactionService.GetReceiptPdfAsync(userId, id);
-        return File(pdf, "application/pdf", fileName);   // brauzer faylı endirir
+        return File(pdf, "application/pdf", fileName);
     }
 }

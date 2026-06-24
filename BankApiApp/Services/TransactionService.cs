@@ -1,7 +1,10 @@
 ﻿using AutoMapper;
 using BankApiApp.Data;
+using BankApiApp.DTOs.Common;
 using BankApiApp.DTOs.Transaction;
 using BankApiApp.DTOs.Transactions;
+using BankApiApp.Exceptions;
+using BankApiApp.Extensions;
 using BankApiApp.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,7 +24,7 @@ public class TransactionService : ITransactionService
     public async Task<TransactionDto> DepositAsync(string userId, DepositDto dto)
     {
         if (dto.Amount <= 0)
-            throw new Exception("Məbləğ 0-dan böyük olmalıdır.");
+            throw new BadRequestException("Məbləğ 0-dan böyük olmalıdır.");
 
         var account = await GetOwnedAccountAsync(userId, dto.AccountId);
         account.Balance += dto.Amount;
@@ -44,12 +47,12 @@ public class TransactionService : ITransactionService
     public async Task<TransactionDto> WithdrawAsync(string userId, WithdrawDto dto)
     {
         if (dto.Amount <= 0)
-            throw new Exception("Məbləğ 0-dan böyük olmalıdır.");
+            throw new BadRequestException("Məbləğ 0-dan böyük olmalıdır.");
 
         var account = await GetOwnedAccountAsync(userId, dto.AccountId);
 
         if (account.Balance < dto.Amount)
-            throw new Exception("Balans kifayət etmir.");
+            throw new BadRequestException("Balans kifayət etmir.");
 
         account.Balance -= dto.Amount;
 
@@ -71,7 +74,7 @@ public class TransactionService : ITransactionService
     public async Task<TransactionDto> TransferAsync(string userId, TransferDto dto)
     {
         if (dto.Amount <= 0)
-            throw new Exception("Məbləğ 0-dan böyük olmalıdır.");
+            throw new BadRequestException("Məbləğ 0-dan böyük olmalıdır.");
 
         var fromAccount = await GetOwnedAccountAsync(userId, dto.FromAccountId);
 
@@ -79,11 +82,11 @@ public class TransactionService : ITransactionService
             .FirstOrDefaultAsync(a => a.AccountNumber == dto.ToAccountNumber);
 
         if (toAccount == null)
-            throw new Exception("Alan hesab tapılmadı.");
+            throw new NotFoundException("Alan hesab tapılmadı.");
         if (fromAccount.Id == toAccount.Id)
-            throw new Exception("Eyni hesaba köçürmə olmaz.");
+            throw new BadRequestException("Eyni hesaba köçürmə olmaz.");
         if (fromAccount.Balance < dto.Amount)
-            throw new Exception("Balans kifayət etmir.");
+            throw new BadRequestException("Balans kifayət etmir.");
 
         // ATOMIC: ya hamısı baş verir, ya heç biri
         await using var dbTransaction = await _context.Database.BeginTransactionAsync();
@@ -122,42 +125,54 @@ public class TransactionService : ITransactionService
             .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId);
 
         if (account == null)
-            throw new Exception("Hesab tapılmadı.");
+            throw new NotFoundException("Hesab tapılmadı.");
         if (account.Status != AccountStatus.Active)
-            throw new Exception("Hesab aktiv deyil.");
+            throw new BadRequestException("Hesab aktiv deyil.");
 
         return account;
     }
-    public async Task<List<TransactionDto>> GetAccountTransactionsAsync(string userId, Guid accountId)
+
+    public async Task<PagedResult<TransactionDto>> GetAccountTransactionsAsync(
+        string userId, Guid accountId, PaginationParams pagination)
     {
         // hesab istifadəçiyə aiddir? (təhlükəsizlik)
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId);
 
         if (account == null)
-            throw new Exception("Hesab tapılmadı.");
+            throw new NotFoundException("Hesab tapılmadı.");
 
-        // bu hesabın həm göndərdiyi, həm aldığı əməliyyatlar
-        var transactions = await _context.Transactions
+        // sorğunu qur (hələ icra olunmur)
+        var query = _context.Transactions
             .Where(t => t.FromAccountId == accountId || t.ToAccountId == accountId)
-            .OrderByDescending(t => t.CreatedAt)   // ən yeni yuxarıda
-            .ToListAsync();
+            .OrderByDescending(t => t.CreatedAt);   // ən yeni yuxarıda
 
-        return _mapper.Map<List<TransactionDto>>(transactions);
+        // entity səviyyəsində səhifələ (Skip/Take bazada işləyir)
+        var paged = await query.ToPagedResultAsync(pagination);
+
+        // bu səhifənin element-lərini DTO-ya map et və yeni nəticə qur
+        return new PagedResult<TransactionDto>
+        {
+            Items = _mapper.Map<List<TransactionDto>>(paged.Items),
+            Page = paged.Page,
+            PageSize = paged.PageSize,
+            TotalCount = paged.TotalCount,
+            TotalPages = paged.TotalPages
+        };
     }
 
     public async Task TransferByCardAsync(string userId, TransferByCardDto dto)
     {
         if (dto.Amount <= 0)
-            throw new Exception("Məbləğ sıfırdan böyük olmalıdır.");
+            throw new BadRequestException("Məbləğ sıfırdan böyük olmalıdır.");
 
         // 1. Göndərənin hesabı + sahiblik
         var fromAccount = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == dto.FromAccountId)
-            ?? throw new Exception("Göndərən hesab tapılmadı.");
+            ?? throw new NotFoundException("Göndərən hesab tapılmadı.");
 
         if (fromAccount.OwnerId != userId)
-            throw new Exception("Bu hesab sizə aid deyil.");
+            throw new BadRequestException("Bu hesab sizə aid deyil.");
 
         // 2. Kart nömrəsindən alıcının kartını + bağlı hesabını tap
         var cardNumber = (dto.ToCardNumber ?? string.Empty).Replace(" ", "");
@@ -165,20 +180,20 @@ public class TransactionService : ITransactionService
         var toCard = await _context.Cards
             .Include(c => c.Account)
             .FirstOrDefaultAsync(c => c.CardNumber == cardNumber)
-            ?? throw new Exception("Bu nömrə ilə kart tapılmadı.");
+            ?? throw new NotFoundException("Bu nömrə ilə kart tapılmadı.");
 
         if (toCard.Status == CardStatus.Blocked)
-            throw new Exception("Alıcının kartı bloklanıb.");
+            throw new BadRequestException("Alıcının kartı bloklanıb.");
 
         var toAccount = toCard.Account;
 
         // 3. Özünə köçürmə qadağası
         if (toAccount.Id == fromAccount.Id)
-            throw new Exception("Eyni hesaba köçürmə edilə bilməz.");
+            throw new BadRequestException("Eyni hesaba köçürmə edilə bilməz.");
 
         // 4. Balans yoxlaması
         if (fromAccount.Balance < dto.Amount)
-            throw new Exception("Balans kifayət deyil.");
+            throw new BadRequestException("Balans kifayət deyil.");
 
         // 5. Atomik köçürmə
         await using var trx = await _context.Database.BeginTransactionAsync();
@@ -199,11 +214,12 @@ public class TransactionService : ITransactionService
         await _context.SaveChangesAsync();
         await trx.CommitAsync();
     }
+
     public async Task<ReceiptDto> GetReceiptAsync(string userId, Guid transactionId)
     {
         var trx = await _context.Transactions
             .FirstOrDefaultAsync(t => t.Id == transactionId)
-            ?? throw new Exception("Əməliyyat tapılmadı.");
+            ?? throw new NotFoundException("Əməliyyat tapılmadı.");
 
         // sahiblik: istifadəçi from və ya to hesabın sahibi olmalıdır
         var myAccountIds = await _context.Accounts
@@ -214,7 +230,7 @@ public class TransactionService : ITransactionService
         bool ownsFrom = trx.FromAccountId.HasValue && myAccountIds.Contains(trx.FromAccountId.Value);
         bool ownsTo = trx.ToAccountId.HasValue && myAccountIds.Contains(trx.ToAccountId.Value);
         if (!ownsFrom && !ownsTo)
-            throw new Exception("Bu əməliyyat sizə aid deyil.");
+            throw new BadRequestException("Bu əməliyyat sizə aid deyil.");
 
         // göstərmək üçün hesab nömrələrini tap
         string? fromNumber = null, toNumber = null;

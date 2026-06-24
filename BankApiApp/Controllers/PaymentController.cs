@@ -1,4 +1,5 @@
-﻿using BankApiApp.DTOs.Payment;
+﻿using BankApiApp.DTOs.Common;
+using BankApiApp.DTOs.Payment;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,9 +27,9 @@ public class PaymentController : ControllerBase
     }
 
     [HttpGet("my")]
-    public async Task<IActionResult> My()
+    public async Task<IActionResult> My([FromQuery] PaginationParams pagination)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        return Ok(await _paymentService.GetMyPaymentsAsync(userId));
+        return Ok(await _paymentService.GetMyPaymentsAsync(userId, pagination));
     }
 }

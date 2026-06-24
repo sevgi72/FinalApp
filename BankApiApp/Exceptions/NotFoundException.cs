@@ -1,7 +1,7 @@
 ﻿namespace BankApiApp.Exceptions;
 
-// 404 — tapılmayan resurs (hesab, kart, kredit yoxdursa)
-public class NotFoundException : Exception
+// 404 — resurs tapılmadı (hesab, kart, kredit, əməliyyat yoxdursa)
+public class NotFoundException : AppException
 {
-    public NotFoundException(string message) : base(message) { }
+    public NotFoundException(string message) : base(message, 404) { }
 }

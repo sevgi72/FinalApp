@@ -1,6 +1,9 @@
 ﻿using BankApiApp.Data;
+using BankApiApp.DTOs.Common;
 using BankApiApp.DTOs.Payment;
 using BankApiApp.DTOs.Payments;
+using BankApiApp.Exceptions;
+using BankApiApp.Extensions;
 using BankApiApp.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,14 +23,14 @@ public class PaymentService : IPaymentService
         // 1. Hesabı tap + sahiblik yoxla
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == dto.AccountId)
-            ?? throw new Exception("Hesab tapılmadı.");
+            ?? throw new NotFoundException("Hesab tapılmadı.");
 
         if (account.OwnerId != userId)
-            throw new Exception("Bu hesab sizə aid deyil.");
+            throw new BadRequestException("Bu hesab sizə aid deyil.");
 
         // 2. Məbləğ yoxlaması
         if (dto.Amount <= 0)
-            throw new Exception("Məbləğ sıfırdan böyük olmalıdır.");
+            throw new BadRequestException("Məbləğ sıfırdan böyük olmalıdır.");
 
         // kart nömrəsini təmizlə (boşluqları sil)
         var cardNumber = (dto.CardNumber ?? string.Empty).Replace(" ", "");
@@ -158,25 +161,33 @@ public class PaymentService : IPaymentService
     private static string GenerateReference()
         => "PAY-" + Guid.NewGuid().ToString("N")[..12].ToUpper();
 
-    public async Task<List<PaymentHistoryDto>> GetMyPaymentsAsync(string userId)
+    public async Task<PagedResult<PaymentHistoryDto>> GetMyPaymentsAsync(
+    string userId, PaginationParams pagination)
     {
-        // istifadəçinin hesablarına aid bütün ödənişlər (yenidən köhnəyə doğru)
-        var payments = await _context.Payments
+        var query = _context.Payments
             .Include(p => p.Account)
             .Where(p => p.Account.OwnerId == userId)
-            .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync();
+            .OrderByDescending(p => p.CreatedAt);
 
-        return payments.Select(p => new PaymentHistoryDto
+        var paged = await query.ToPagedResultAsync(pagination);
+
+        return new PagedResult<PaymentHistoryDto>
         {
-            Id = p.Id,
-            AccountId = p.AccountId,
-            Amount = p.Amount,
-            CardLast4 = p.CardLast4,
-            Status = p.Status.ToString(),
-            Reference = p.Reference,
-            FailureReason = p.FailureReason,
-            CreatedAt = p.CreatedAt
-        }).ToList();
+            Items = paged.Items.Select(p => new PaymentHistoryDto
+            {
+                Id = p.Id,
+                AccountId = p.AccountId,
+                Amount = p.Amount,
+                CardLast4 = p.CardLast4,
+                Status = p.Status.ToString(),
+                Reference = p.Reference,
+                FailureReason = p.FailureReason,
+                CreatedAt = p.CreatedAt
+            }).ToList(),
+            Page = paged.Page,
+            PageSize = paged.PageSize,
+            TotalCount = paged.TotalCount,
+            TotalPages = paged.TotalPages
+        };
     }
 }

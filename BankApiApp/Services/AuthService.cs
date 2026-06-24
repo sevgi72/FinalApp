@@ -1,6 +1,7 @@
 ﻿using BankApiApp.Data;
 using BankApiApp.DTOs.Acoount;
 using BankApiApp.DTOs.Auth;
+using BankApiApp.Exceptions;
 using BankApiApp.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +33,7 @@ public class AuthService : IAuthService
     {
         var existing = await _userManager.FindByEmailAsync(dto.Email);
         if (existing != null)
-            throw new Exception("Bu email artıq qeydiyyatdan keçib.");
+            throw new BadRequestException("Bu email artıq qeydiyyatdan keçib.");
 
         var user = new ApplicationUser
         {
@@ -43,7 +44,7 @@ public class AuthService : IAuthService
 
         var result = await _userManager.CreateAsync(user, dto.Password);
         if (!result.Succeeded)
-            throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
+            throw new BadRequestException(string.Join("; ", result.Errors.Select(e => e.Description)));
 
         await _userManager.AddToRoleAsync(user, "Customer");
 
@@ -54,11 +55,11 @@ public class AuthService : IAuthService
     {
         var user = await _userManager.FindByEmailAsync(dto.Email);
         if (user == null)
-            throw new Exception("Email və ya parol yanlışdır.");
+            throw new BadRequestException("Email və ya parol yanlışdır.");
 
         var valid = await _userManager.CheckPasswordAsync(user, dto.Password);
         if (!valid)
-            throw new Exception("Email və ya parol yanlışdır.");
+            throw new BadRequestException("Email və ya parol yanlışdır.");
 
         return await BuildAuthResponseAsync(user);
     }
@@ -70,7 +71,7 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(rt => rt.Token == dto.RefreshToken);
 
         if (stored == null || stored.IsRevoked || stored.ExpiresAt < DateTime.UtcNow)
-            throw new Exception("Refresh token etibarsızdır və ya vaxtı bitib.");
+            throw new BadRequestException("Refresh token etibarsızdır və ya vaxtı bitib.");
 
         // köhnə refresh token-i ləğv et (rotation)
         stored.IsRevoked = true;
@@ -147,12 +148,12 @@ public class AuthService : IAuthService
     {
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
-            throw new Exception("İstifadəçi tapılmadı.");
+            throw new NotFoundException("İstifadəçi tapılmadı.");
 
         // Identity köhnə parolu özü yoxlayır, yenisini hash-ləyir
         var result = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
         if (!result.Succeeded)
-            throw new Exception(string.Join("; ", result.Errors.Select(e => e.Description)));
+            throw new BadRequestException(string.Join("; ", result.Errors.Select(e => e.Description)));
 
         // Təhlükəsizlik: bütün köhnə refresh token-ləri ləğv et (köhnə sessiyalar bitsin)
         var tokens = await _context.RefreshTokens
@@ -179,7 +180,7 @@ public class AuthService : IAuthService
     public async Task<ProfileDto> GetProfileAsync(string userId)
     {
         var user = await _userManager.FindByIdAsync(userId)
-            ?? throw new Exception("İstifadəçi tapılmadı.");
+            ?? throw new NotFoundException("İstifadəçi tapılmadı.");
 
         var roles = await _userManager.GetRolesAsync(user);
 

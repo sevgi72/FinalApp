@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
 using BankApiApp.Data;
+using BankApiApp.DTOs.Common;
 using BankApiApp.DTOs.Loan;
+using BankApiApp.Exceptions;
+using BankApiApp.Extensions;
 using BankApiApp.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,14 +24,14 @@ public class LoanService : ILoanService
     public async Task<LoanDto> RequestLoanAsync(string userId, LoanRequestDto dto)
     {
         if (dto.Principal <= 0)
-            throw new Exception("Kredit məbləği 0-dan böyük olmalıdır.");
+            throw new BadRequestException("Kredit məbləği 0-dan böyük olmalıdır.");
         if (dto.TermMonths <= 0)
-            throw new Exception("Müddət 0-dan böyük olmalıdır.");
+            throw new BadRequestException("Müddət 0-dan böyük olmalıdır.");
 
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == dto.AccountId && a.OwnerId == userId);
         if (account == null)
-            throw new Exception("Hesab tapılmadı.");
+            throw new NotFoundException("Hesab tapılmadı.");
 
         // AMORTIZASIYA: aylıq ödəniş və ümumi məbləği hesabla
         var (monthlyPayment, totalPayable) =
@@ -52,17 +55,6 @@ public class LoanService : ILoanService
         return _mapper.Map<LoanDto>(loan);
     }
 
-    public async Task<List<LoanDto>> GetMyLoansAsync(string userId)
-    {
-        var loans = await _context.Loans
-            .Include(l => l.Payments)
-            .Where(l => l.Account.OwnerId == userId)
-            .OrderByDescending(l => l.CreatedAt)
-            .ToListAsync();
-
-        return _mapper.Map<List<LoanDto>>(loans);
-    }
-
     // Amortizasiya hesablaması
     private (decimal monthlyPayment, decimal totalPayable) CalculateAmortization(
         decimal principal, decimal annualRate, int termMonths)
@@ -75,14 +67,44 @@ public class LoanService : ILoanService
         total = monthly * termMonths;           // yuvarlaqlaşdırmadan sonra tutarlı saxla
         return (monthly, total);
     }
-    public async Task<List<LoanDto>> GetPendingLoansAsync()
+
+    public async Task<PagedResult<LoanDto>> GetMyLoansAsync(
+    string userId, PaginationParams pagination)
     {
-        var loans = await _context.Loans
+        var query = _context.Loans
+            .Include(l => l.Payments)
+            .Where(l => l.Account.OwnerId == userId)
+            .OrderByDescending(l => l.CreatedAt);
+
+        var paged = await query.ToPagedResultAsync(pagination);
+
+        return new PagedResult<LoanDto>
+        {
+            Items = _mapper.Map<List<LoanDto>>(paged.Items),
+            Page = paged.Page,
+            PageSize = paged.PageSize,
+            TotalCount = paged.TotalCount,
+            TotalPages = paged.TotalPages
+        };
+    }
+
+    public async Task<PagedResult<LoanDto>> GetPendingLoansAsync(PaginationParams pagination)
+    {
+        var query = _context.Loans
             .Include(l => l.Payments)
             .Where(l => l.Status == LoanStatus.Pending)
-            .OrderBy(l => l.CreatedAt)
-            .ToListAsync();
-        return _mapper.Map<List<LoanDto>>(loans);
+            .OrderBy(l => l.CreatedAt);
+
+        var paged = await query.ToPagedResultAsync(pagination);
+
+        return new PagedResult<LoanDto>
+        {
+            Items = _mapper.Map<List<LoanDto>>(paged.Items),
+            Page = paged.Page,
+            PageSize = paged.PageSize,
+            TotalCount = paged.TotalCount,
+            TotalPages = paged.TotalPages
+        };
     }
 
     public async Task<LoanDto> ApproveLoanAsync(Guid loanId)
@@ -92,9 +114,9 @@ public class LoanService : ILoanService
             .FirstOrDefaultAsync(l => l.Id == loanId);
 
         if (loan == null)
-            throw new Exception("Kredit tapılmadı.");
+            throw new NotFoundException("Kredit tapılmadı.");
         if (loan.Status != LoanStatus.Pending)
-            throw new Exception("Yalnız gözləyən kredit təsdiqlənə bilər.");
+            throw new BadRequestException("Yalnız gözləyən kredit təsdiqlənə bilər.");
 
         await using var dbTx = await _context.Database.BeginTransactionAsync();
         try
@@ -143,9 +165,9 @@ public class LoanService : ILoanService
     {
         var loan = await _context.Loans.FirstOrDefaultAsync(l => l.Id == loanId);
         if (loan == null)
-            throw new Exception("Kredit tapılmadı.");
+            throw new NotFoundException("Kredit tapılmadı.");
         if (loan.Status != LoanStatus.Pending)
-            throw new Exception("Yalnız gözləyən kredit rədd edilə bilər.");
+            throw new BadRequestException("Yalnız gözləyən kredit rədd edilə bilər.");
 
         loan.Status = LoanStatus.Rejected;
         await _context.SaveChangesAsync();

@@ -1,5 +1,6 @@
 using BankApiApp.Data;
 using BankApiApp.Extensions;
+using BankApiApp.Middleware;
 using BankApiApp.Services;
 using Hangfire;
 
@@ -11,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplicationServices(builder.Configuration);
 
 var app = builder.Build();
-
+app.UseMiddleware<ExceptionMiddleware>();
 // Rolları və admin istifadəçisini seed et
 using (var scope = app.Services.CreateScope())
 {

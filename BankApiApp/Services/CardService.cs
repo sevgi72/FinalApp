@@ -1,5 +1,8 @@
 ﻿using BankApiApp.Data;
 using BankApiApp.DTOs.Card;
+using BankApiApp.DTOs.Common;
+using BankApiApp.Exceptions;
+using BankApiApp.Extensions;
 using BankApiApp.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,10 +23,10 @@ public class CardService : ICardService
         var account = await _context.Accounts
             .Include(a => a.Owner)
             .FirstOrDefaultAsync(a => a.Id == dto.AccountId)
-            ?? throw new Exception("Hesab tapılmadı.");
+            ?? throw new NotFoundException("Hesab tapılmadı.");
 
         if (account.OwnerId != userId)
-            throw new Exception("Bu hesab sizə aid deyil.");
+            throw new BadRequestException("Bu hesab sizə aid deyil.");
 
         // unikal kart nömrəsi yarat (toqquşma olarsa təkrar)
         string cardNumber;
@@ -60,14 +63,24 @@ public class CardService : ICardService
         };
     }
 
-    public async Task<List<CardDto>> GetMyCardsAsync(string userId)
+    public async Task<PagedResult<CardDto>> GetMyCardsAsync(
+    string userId, PaginationParams pagination)
     {
-        var cards = await _context.Cards
+        var query = _context.Cards
             .Include(c => c.Account)
             .Where(c => c.Account.OwnerId == userId)
-            .ToListAsync();
+            .OrderByDescending(c => c.CreatedAt);
 
-        return cards.Select(MapToDto).ToList();
+        var paged = await query.ToPagedResultAsync(pagination);
+
+        return new PagedResult<CardDto>
+        {
+            Items = paged.Items.Select(MapToDto).ToList(),
+            Page = paged.Page,
+            PageSize = paged.PageSize,
+            TotalCount = paged.TotalCount,
+            TotalPages = paged.TotalPages
+        };
     }
 
     public async Task<CardDto> GetCardAsync(string userId, Guid cardId)
@@ -98,10 +111,10 @@ public class CardService : ICardService
         var card = await _context.Cards
             .Include(c => c.Account)
             .FirstOrDefaultAsync(c => c.Id == cardId)
-            ?? throw new Exception("Kart tapılmadı.");
+            ?? throw new NotFoundException("Kart tapılmadı.");
 
         if (card.Account.OwnerId != userId)
-            throw new Exception("Bu kart sizə aid deyil.");
+            throw new BadRequestException("Bu kart sizə aid deyil.");
 
         return card;
     }

@@ -1,4 +1,5 @@
 ﻿using BankApiApp.DTOs.Card;
+using BankApiApp.DTOs.Common;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,10 +27,10 @@ public class CardController : ControllerBase
     }
 
     [HttpGet("my")]
-    public async Task<IActionResult> My()
+    public async Task<IActionResult> My([FromQuery] PaginationParams pagination)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        return Ok(await _cardService.GetMyCardsAsync(userId));
+        return Ok(await _cardService.GetMyCardsAsync(userId, pagination));
     }
 
     [HttpGet("{id}")]

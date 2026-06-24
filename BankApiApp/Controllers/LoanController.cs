@@ -1,4 +1,5 @@
-﻿using BankApiApp.DTOs.Loan;
+﻿using BankApiApp.DTOs.Common;
+using BankApiApp.DTOs.Loan;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,15 +20,20 @@ public class LoanController : ControllerBase
         => Ok(await _loanService.RequestLoanAsync(GetUserId(), dto));
 
     [HttpGet("my")]
-    public async Task<IActionResult> GetMy()
-        => Ok(await _loanService.GetMyLoansAsync(GetUserId()));
+    public async Task<IActionResult> My([FromQuery] PaginationParams pagination)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _loanService.GetMyLoansAsync(userId, pagination));
+    }
 
-    private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
     [HttpGet("pending")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> GetPending()
-    => Ok(await _loanService.GetPendingLoansAsync());
-
+    public async Task<IActionResult> Pending([FromQuery] PaginationParams pagination)
+    {
+        return Ok(await _loanService.GetPendingLoansAsync(pagination));
+    }
+    private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    
     [HttpPost("{id}/approve")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Approve(Guid id)

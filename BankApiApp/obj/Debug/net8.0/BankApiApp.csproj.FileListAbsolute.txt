@@ -143,7 +143,6 @@ C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\obj\Debug\net8.0\refint\BankA
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\obj\Debug\net8.0\BankApiApp.pdb
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\obj\Debug\net8.0\BankApiApp.genruntimeconfig.cache
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\obj\Debug\net8.0\ref\BankApiApp.dll
-C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\LatoFont\Lato-Black.ttf
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\LatoFont\Lato-BlackItalic.ttf
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\LatoFont\Lato-Bold.ttf
@@ -180,3 +179,4 @@ C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\runtimes\win
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\runtimes\win-x64\native\qpdf.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\runtimes\win-x86\native\QuestPdfSkia.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\runtimes\win-x86\native\qpdf.dll
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
