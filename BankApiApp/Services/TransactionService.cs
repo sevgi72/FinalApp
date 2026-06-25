@@ -270,4 +270,39 @@ public class TransactionService : ITransactionService
         if (string.IsNullOrEmpty(accountNumber)) return null;
         return accountNumber.Length <= 4 ? accountNumber : "**** " + accountNumber[^4..];
     }
+
+
+
+    //additional functions can be added here in the future
+    public async Task<(byte[] Content, string FileName)> ExportTransactionsCsvAsync(
+    string userId, Guid accountId)
+    {
+        // hesab istifadəçiyə aiddir? (təhlükəsizlik)
+        var account = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId)
+            ?? throw new NotFoundException("Hesab tapılmadı.");
+
+        var transactions = await _context.Transactions
+            .Where(t => t.FromAccountId == accountId || t.ToAccountId == accountId)
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Tarix,Növ,Məbləğ,Status,Təsvir");   // başlıq sətri
+
+        foreach (var t in transactions)
+        {
+            var date = t.CreatedAt.ToString("dd.MM.yyyy HH:mm");
+            var description = (t.Description ?? "").Replace("\"", "\"\"");   // dırnaqları qoru
+            sb.AppendLine($"{date},{t.Type},{t.Amount},{t.Status},\"{description}\"");
+        }
+
+        // UTF-8 BOM əlavə et ki, Excel Azərbaycan hərflərini düzgün göstərsin
+        var preamble = System.Text.Encoding.UTF8.GetPreamble();
+        var body = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        var content = preamble.Concat(body).ToArray();
+
+        var fileName = $"emeliyyatlar-{account.AccountNumber}.csv";
+        return (content, fileName);
+    }
 }
