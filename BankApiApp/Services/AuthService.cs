@@ -1,5 +1,5 @@
 ﻿using BankApiApp.Data;
-using BankApiApp.DTOs.Acoount;
+using BankApiApp.DTOs.Account;
 using BankApiApp.DTOs.Auth;
 using BankApiApp.Exceptions;
 using BankApiApp.Models;
@@ -18,15 +18,18 @@ public class AuthService : IAuthService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _config;
     private readonly AppDbContext _context;
+    private readonly IAuditService _auditService;
 
     public AuthService(
         UserManager<ApplicationUser> userManager,
         IConfiguration config,
-        AppDbContext context)
+        AppDbContext context,
+        IAuditService auditService)
     {
         _userManager = userManager;
         _config = config;
         _context = context;
+        _auditService = auditService;
     }
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
@@ -55,11 +58,19 @@ public class AuthService : IAuthService
     {
         var user = await _userManager.FindByEmailAsync(dto.Email);
         if (user == null)
+        {
+            await _auditService.LogManualAsync("LoginFailed", $"Mövcud olmayan email: {dto.Email}");
             throw new BadRequestException("Email və ya parol yanlışdır.");
+        }
 
         var valid = await _userManager.CheckPasswordAsync(user, dto.Password);
         if (!valid)
+        {
+            await _auditService.LogManualAsync("LoginFailed", "Yanlış parol.", user.Id, user.Email);
             throw new BadRequestException("Email və ya parol yanlışdır.");
+        }
+
+        await _auditService.LogManualAsync("Login", "Uğurlu giriş.", user.Id, user.Email);
 
         return await BuildAuthResponseAsync(user);
     }
@@ -162,6 +173,8 @@ public class AuthService : IAuthService
         foreach (var t in tokens)
             t.IsRevoked = true;
         await _context.SaveChangesAsync();
+
+        await _auditService.LogManualAsync("PasswordChanged", "Parol dəyişdirildi.", userId);
     }
 
     public async Task LogoutAsync(string userId, RefreshTokenRequestDto dto)

@@ -37,6 +37,8 @@ namespace BankApiApp.Data.Configurations
 
             // PostgreSQL concurrency — xmin sistem sütunu ilə
             //builder.UseXminAsConcurrencyToken();
+
+            builder.Property(a => a.Version).IsRowVersion();
         }
     }
 }

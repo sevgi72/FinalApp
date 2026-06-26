@@ -1,4 +1,4 @@
-﻿namespace BankApiApp.DTOs.Acoount;
+﻿namespace BankApiApp.DTOs.Auth;
 
 public class RegisterDto
 {

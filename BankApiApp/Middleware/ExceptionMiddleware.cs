@@ -1,5 +1,7 @@
 ﻿using BankApiApp.DTOs;
+using BankApiApp.DTOs.Common;
 using BankApiApp.Exceptions;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 namespace BankApiApp.Middleware;
@@ -19,30 +21,36 @@ public class ExceptionMiddleware
     {
         try
         {
-            // sorğunu növbəti mərhələyə ötür (controller-ə çatır)
             await _next(context);
         }
         catch (Exception ex)
         {
-            // hər hansı yerdə atılan xəta bura düşür
             await HandleExceptionAsync(context, ex);
         }
     }
 
     private async Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
-        // bizim öz xətalarımız status kodu daşıyır; naməlum xəta → 500
-        var statusCode = ex is AppException appEx
-            ? appEx.StatusCode
-            : StatusCodes.Status500InternalServerError;
+        // status kodu xətanın tipinə görə seçilir
+        var statusCode = ex switch
+        {
+            AppException appEx => appEx.StatusCode,
+            DbUpdateConcurrencyException => StatusCodes.Status409Conflict,
+            _ => StatusCodes.Status500InternalServerError
+        };
 
-        // 500 = real bug → loglayırıq və detalını gizlədirik (təhlükəsizlik)
+        // 500 = real bug → loglayırıq; toqquşma və biznes xətaları normaldır
         if (statusCode == StatusCodes.Status500InternalServerError)
             _logger.LogError(ex, "Gözlənilməyən xəta baş verdi.");
 
-        var message = statusCode == StatusCodes.Status500InternalServerError
-            ? "Daxili server xətası baş verdi."
-            : ex.Message;
+        // istifadəçiyə gedən mesaj
+        var message = statusCode switch
+        {
+            StatusCodes.Status500InternalServerError => "Daxili server xətası baş verdi.",
+            StatusCodes.Status409Conflict =>
+                "Əməliyyat eyni anda başqa dəyişikliklə toqquşdu. Zəhmət olmasa yenidən cəhd edin.",
+            _ => ex.Message
+        };
 
         var response = new ErrorResponseDto
         {

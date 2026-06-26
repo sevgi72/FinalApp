@@ -1,4 +1,4 @@
-﻿namespace BankApiApp.DTOs.Transaction;
+﻿namespace BankApiApp.DTOs.Transactions;
 
 public class TransactionDto
 {

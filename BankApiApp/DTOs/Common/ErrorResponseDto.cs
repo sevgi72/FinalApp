@@ -1,4 +1,4 @@
-﻿namespace BankApiApp.DTOs;
+﻿namespace BankApiApp.DTOs.Common;
 
 public class ErrorResponseDto
 {

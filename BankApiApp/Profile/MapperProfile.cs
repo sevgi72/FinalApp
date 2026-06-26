@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using BankApiApp.DTOs.Account;
 using BankApiApp.DTOs.Loan;
-using BankApiApp.DTOs.Transaction;
+using BankApiApp.DTOs.Transactions;
 using BankApiApp.Models;
 
 namespace BankApiApp.Mappings;

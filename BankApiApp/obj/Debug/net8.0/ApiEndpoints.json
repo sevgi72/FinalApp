@@ -125,6 +125,27 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "BankApiApp.Controllers.AuditController",
+    "Method": "GetLogs",
+    "RelativePath": "api/Audit",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BankApiApp.Controllers.AuthController",
     "Method": "ChangePassword",
     "RelativePath": "api/Auth/change-password",
@@ -134,7 +155,7 @@
     "Parameters": [
       {
         "Name": "dto",
-        "Type": "BankApiApp.DTOs.Acoount.ChangePasswordDto",
+        "Type": "BankApiApp.DTOs.Auth.ChangePasswordDto",
         "IsRequired": true
       }
     ],
@@ -150,7 +171,7 @@
     "Parameters": [
       {
         "Name": "dto",
-        "Type": "BankApiApp.DTOs.Acoount.LoginDto",
+        "Type": "BankApiApp.DTOs.Auth.LoginDto",
         "IsRequired": true
       }
     ],
@@ -208,7 +229,7 @@
     "Parameters": [
       {
         "Name": "dto",
-        "Type": "BankApiApp.DTOs.Acoount.RegisterDto",
+        "Type": "BankApiApp.DTOs.Auth.RegisterDto",
         "IsRequired": true
       }
     ],
@@ -285,7 +306,55 @@
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
-    "Parameters": [],
+    "Parameters": [
+      {
+        "Name": "Page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.LimitController",
+    "Method": "Get",
+    "RelativePath": "api/Limit/{accountId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "accountId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.LimitController",
+    "Method": "Update",
+    "RelativePath": "api/Limit/{accountId}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "accountId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.Limits.UpdateLimitsDto",
+        "IsRequired": true
+      }
+    ],
     "ReturnTypes": []
   },
   {
@@ -322,22 +391,44 @@
   },
   {
     "ContainingType": "BankApiApp.Controllers.LoanController",
-    "Method": "GetMy",
+    "Method": "My",
     "RelativePath": "api/Loan/my",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
-    "Parameters": [],
+    "Parameters": [
+      {
+        "Name": "Page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
     "ReturnTypes": []
   },
   {
     "ContainingType": "BankApiApp.Controllers.LoanController",
-    "Method": "GetPending",
+    "Method": "Pending",
     "RelativePath": "api/Loan/pending",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
-    "Parameters": [],
+    "Parameters": [
+      {
+        "Name": "Page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
     "ReturnTypes": []
   },
   {
@@ -373,7 +464,18 @@
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
-    "Parameters": [],
+    "Parameters": [
+      {
+        "Name": "Page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
     "ReturnTypes": []
   },
   {
@@ -460,7 +562,7 @@
     "Parameters": [
       {
         "Name": "dto",
-        "Type": "BankApiApp.DTOs.Transaction.DepositDto",
+        "Type": "BankApiApp.DTOs.Transactions.DepositDto",
         "IsRequired": true
       }
     ],
@@ -476,7 +578,7 @@
     "Parameters": [
       {
         "Name": "dto",
-        "Type": "BankApiApp.DTOs.Transaction.TransferDto",
+        "Type": "BankApiApp.DTOs.Transactions.TransferDto",
         "IsRequired": true
       }
     ],
@@ -508,7 +610,7 @@
     "Parameters": [
       {
         "Name": "dto",
-        "Type": "BankApiApp.DTOs.Transaction.WithdrawDto",
+        "Type": "BankApiApp.DTOs.Transactions.WithdrawDto",
         "IsRequired": true
       }
     ],

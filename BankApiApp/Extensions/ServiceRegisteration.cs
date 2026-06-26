@@ -1,4 +1,5 @@
 ﻿using BankApiApp.Data;
+using BankApiApp.Data.Interceptors;
 using BankApiApp.Models;
 using BankApiApp.Services;
 using Hangfire;
@@ -10,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
+
 
 namespace BankApiApp.Extensions;
 
@@ -32,10 +34,15 @@ public static class ServiceRegistration
 
     // Verilənlər bazası
     private static IServiceCollection AddPersistence(
-        this IServiceCollection services, IConfiguration configuration)
+    this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+        services.AddSingleton<AuditInterceptor>();
+
+        services.AddDbContext<AppDbContext>((sp, options) =>
+            options
+                .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+                .AddInterceptors(sp.GetRequiredService<AuditInterceptor>()));
+
         return services;
     }
 
@@ -115,7 +122,8 @@ public static class ServiceRegistration
     private static IServiceCollection AddAppDependencies(this IServiceCollection services)
     {
         services.AddAutoMapper(cfg => { }, typeof(Program));
-
+        services.AddHttpContextAccessor();
+        services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<ITransactionService, TransactionService>();
@@ -124,6 +132,7 @@ public static class ServiceRegistration
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<ICardService, CardService>();
         services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<ILimitService, LimitService>();
         return services;
     }
 

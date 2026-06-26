@@ -25,7 +25,18 @@ namespace BankApiApp.Models
 
         public ICollection<Card> Cards { get; set; } = new List<Card>();
 
-        //[Timestamp]
-        //public uint RowVersion { get; set; }   concurrency ucn 
+        // Limitlər (null olarsa standart limit tətbiq olunur)
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? DailyLimit { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? MonthlyLimit { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? YearlyLimit { get; set; }
+
+        // PostgreSQL concurrency token — xmin sistem sütununa bağlanır
+        [Timestamp]
+        public uint Version { get; set; }
     }
 }

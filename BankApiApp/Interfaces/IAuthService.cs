@@ -1,5 +1,4 @@
-﻿using BankApiApp.DTOs.Acoount;
-using BankApiApp.DTOs.Auth;
+﻿using BankApiApp.DTOs.Auth;
 
 namespace BankApiApp.Services;
 

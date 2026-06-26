@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using BankApiApp.Data;
 using BankApiApp.DTOs.Common;
-using BankApiApp.DTOs.Transaction;
 using BankApiApp.DTOs.Transactions;
 using BankApiApp.Exceptions;
 using BankApiApp.Extensions;
@@ -14,11 +13,13 @@ public class TransactionService : ITransactionService
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
+    private readonly ILimitService _limitService;   // ← yeni
 
-    public TransactionService(AppDbContext context, IMapper mapper)
+    public TransactionService(AppDbContext context, IMapper mapper, ILimitService limitService)
     {
         _context = context;
         _mapper = mapper;
+        _limitService = limitService;   // ← yeni
     }
 
     public async Task<TransactionDto> DepositAsync(string userId, DepositDto dto)
@@ -54,6 +55,9 @@ public class TransactionService : ITransactionService
         if (account.Balance < dto.Amount)
             throw new BadRequestException("Balans kifayət etmir.");
 
+        // limit yoxlaması (günlük/aylıq/illik)
+        await _limitService.EnsureWithinLimitsAsync(account, dto.Amount);
+
         account.Balance -= dto.Amount;
 
         var transaction = new Transaction
@@ -87,6 +91,9 @@ public class TransactionService : ITransactionService
             throw new BadRequestException("Eyni hesaba köçürmə olmaz.");
         if (fromAccount.Balance < dto.Amount)
             throw new BadRequestException("Balans kifayət etmir.");
+
+        // limit yoxlaması (günlük/aylıq/illik)
+        await _limitService.EnsureWithinLimitsAsync(fromAccount, dto.Amount);
 
         // ATOMIC: ya hamısı baş verir, ya heç biri
         await using var dbTransaction = await _context.Database.BeginTransactionAsync();
@@ -195,7 +202,10 @@ public class TransactionService : ITransactionService
         if (fromAccount.Balance < dto.Amount)
             throw new BadRequestException("Balans kifayət deyil.");
 
-        // 5. Atomik köçürmə
+        // 5. limit yoxlaması (günlük/aylıq/illik)
+        await _limitService.EnsureWithinLimitsAsync(fromAccount, dto.Amount);
+
+        // 6. Atomik köçürmə
         await using var trx = await _context.Database.BeginTransactionAsync();
 
         fromAccount.Balance -= dto.Amount;
@@ -271,11 +281,8 @@ public class TransactionService : ITransactionService
         return accountNumber.Length <= 4 ? accountNumber : "**** " + accountNumber[^4..];
     }
 
-
-
-    //additional functions can be added here in the future
     public async Task<(byte[] Content, string FileName)> ExportTransactionsCsvAsync(
-    string userId, Guid accountId)
+        string userId, Guid accountId)
     {
         // hesab istifadəçiyə aiddir? (təhlükəsizlik)
         var account = await _context.Accounts

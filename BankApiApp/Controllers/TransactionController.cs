@@ -1,5 +1,4 @@
 ﻿using BankApiApp.DTOs.Common;
-using BankApiApp.DTOs.Transaction;
 using BankApiApp.DTOs.Transactions;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
