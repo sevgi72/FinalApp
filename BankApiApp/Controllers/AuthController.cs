@@ -45,6 +45,10 @@ public class AuthController : ControllerBase
         return Ok(new { message = await _authService.ToggleTwoFactorAsync(userId, dto) });
     }
 
+    [HttpPost("google-login")]
+    public async Task<IActionResult> GoogleLogin(GoogleLoginDto dto)
+        => Ok(await _authService.GoogleLoginAsync(dto));
+
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
         => Ok(await _authService.RefreshTokenAsync(dto));

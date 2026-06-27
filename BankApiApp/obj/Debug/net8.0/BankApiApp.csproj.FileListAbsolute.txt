@@ -179,4 +179,9 @@ C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\runtimes\win
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\runtimes\win-x64\native\qpdf.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\runtimes\win-x86\native\QuestPdfSkia.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\runtimes\win-x86\native\qpdf.dll
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Google.Apis.dll
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Google.Apis.Auth.dll
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Google.Apis.Core.dll
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\System.Management.dll
+C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Management.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

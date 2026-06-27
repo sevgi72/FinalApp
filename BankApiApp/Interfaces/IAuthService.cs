@@ -15,7 +15,10 @@ public interface IAuthService
     Task<string> ForgotPasswordAsync(ForgotPasswordDto dto);
     Task<string> ResetPasswordAsync(ResetPasswordDto dto);
 
-    // 2FA (yeni)
+    // 2FA 
     Task<AuthResponseDto> VerifyTwoFactorAsync(VerifyTwoFactorDto dto);
     Task<string> ToggleTwoFactorAsync(string userId, ToggleTwoFactorDto dto);
+
+    // Google login 
+    Task<AuthResponseDto> GoogleLoginAsync(GoogleLoginDto dto);
 }

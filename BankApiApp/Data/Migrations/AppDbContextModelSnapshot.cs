@@ -118,6 +118,9 @@ namespace BankApiApp.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("GoogleId")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsTwoFactorEnabled")
                         .HasColumnType("boolean");
 

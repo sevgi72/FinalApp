@@ -27,6 +27,9 @@ namespace BankApiApp.Models
         public bool IsTwoFactorEnabled { get; set; } = false;   // istifadəçi seçimi
         public string? TwoFactorCode { get; set; }
         public DateTime? TwoFactorCodeExpiry { get; set; }
+
+        // Google login üçün
+        public string? GoogleId { get; set; }   // Google istifadəçisinin unikal ID-si (null = adi qeydiyyat)
     }
 
 }

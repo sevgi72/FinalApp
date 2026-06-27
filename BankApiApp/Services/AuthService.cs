@@ -3,6 +3,7 @@ using BankApiApp.DTOs.Account;
 using BankApiApp.DTOs.Auth;
 using BankApiApp.Exceptions;
 using BankApiApp.Models;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -135,7 +136,6 @@ public class AuthService : IAuthService
             throw new BadRequestException("Email təsdiqlənməyib. Zəhmət olmasa əvvəlcə emailinizi təsdiqləyin.");
         }
 
-        // 2FA AÇIQDIRSA: token vermə, OTP göndər
         if (user.IsTwoFactorEnabled)
         {
             var otp = GenerateCode();
@@ -157,7 +157,6 @@ public class AuthService : IAuthService
             };
         }
 
-        // 2FA bağlıdırsa: adi login (birbaşa token)
         await _auditService.LogManualAsync("Login", "Uğurlu giriş.", user.Id, user.Email);
         return await BuildAuthResponseAsync(user);
     }
@@ -173,7 +172,6 @@ public class AuthService : IAuthService
             throw new BadRequestException("Kod yanlışdır və ya vaxtı bitib.");
         }
 
-        // kodu sil (təkrar işlənməsin)
         user.TwoFactorCode = null;
         user.TwoFactorCodeExpiry = null;
         await _userManager.UpdateAsync(user);
@@ -199,6 +197,69 @@ public class AuthService : IAuthService
         return dto.Enable
             ? "İki mərhələli doğrulama aktivləşdirildi."
             : "İki mərhələli doğrulama söndürüldü.";
+    }
+
+    // --- GOOGLE LOGIN (yeni) ---
+
+    public async Task<AuthResponseDto> GoogleLoginAsync(GoogleLoginDto dto)
+    {
+        // 1. Google ID token-i yoxla (imza + bizim Client ID-yə aid olub-olmadığı)
+        GoogleJsonWebSignature.Payload payload;
+        try
+        {
+            var settings = new GoogleJsonWebSignature.ValidationSettings
+            {
+                Audience = new[] { _config["GoogleAuth:ClientId"] }
+            };
+            payload = await GoogleJsonWebSignature.ValidateAsync(dto.IdToken, settings);
+        }
+        catch
+        {
+            throw new BadRequestException("Google token etibarsızdır.");
+        }
+
+        // 2. Token-dən məlumatları çıxar
+        var email = payload.Email;
+        var fullName = payload.Name ?? email;
+        var googleId = payload.Subject;   // Google-un unikal istifadəçi ID-si
+
+        // 3. İstifadəçi bazada var? (email üzrə)
+        var user = await _userManager.FindByEmailAsync(email);
+
+        if (user == null)
+        {
+            // YOXDUR → yeni yarat (parolsuz, email təsdiqli — Google onsuz təsdiqləyib)
+            user = new ApplicationUser
+            {
+                FullName = fullName,
+                Email = email,
+                UserName = email,
+                EmailConfirmed = true,      // Google emaili təsdiqləyib
+                GoogleId = googleId
+            };
+
+            var result = await _userManager.CreateAsync(user);   // parol YOX
+            if (!result.Succeeded)
+                throw new BadRequestException(string.Join("; ", result.Errors.Select(e => e.Description)));
+
+            await _userManager.AddToRoleAsync(user, "Customer");
+            await _auditService.LogManualAsync("GoogleRegister", "Google ilə qeydiyyat.", user.Id, user.Email);
+        }
+        else
+        {
+            // VAR → mövcud hesaba Google-u bağla (əgər hələ bağlı deyilsə)
+            if (string.IsNullOrEmpty(user.GoogleId))
+            {
+                user.GoogleId = googleId;
+                user.EmailConfirmed = true;   // Google ilə girirsə email təsdiqlidir
+                await _userManager.UpdateAsync(user);
+            }
+        }
+
+        await _auditService.LogManualAsync("GoogleLogin", "Google ilə giriş.", user.Id, user.Email);
+
+        // 4. Bizim öz JWT token-imizi ver
+        return await BuildAuthResponseAsync(user);
     }
 
     public async Task<AuthResponseDto> RefreshTokenAsync(RefreshTokenRequestDto dto)
@@ -254,6 +315,7 @@ public class AuthService : IAuthService
             EmailTemplates.PasswordReset(user.FullName, code));
 
         await _auditService.LogManualAsync("PwdResetRequest", "Parol sıfırlama tələb edildi.", user.Id, user.Email);
+
         return "Əgər bu email qeydiyyatdadırsa, sıfırlama kodu göndərildi.";
     }
 
