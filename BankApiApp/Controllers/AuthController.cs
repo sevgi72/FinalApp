@@ -19,21 +19,43 @@ public class AuthController : ControllerBase
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
-    {
-        var result = await _authService.RegisterAsync(dto);
-        return Ok(result);
-    }
+        => Ok(new { message = await _authService.RegisterAsync(dto) });
+
+    [HttpPost("confirm-email")]
+    public async Task<IActionResult> ConfirmEmail(ConfirmEmailDto dto)
+        => Ok(new { message = await _authService.ConfirmEmailAsync(dto) });
+
+    [HttpPost("resend-code")]
+    public async Task<IActionResult> ResendCode(ResendCodeDto dto)
+        => Ok(new { message = await _authService.ResendConfirmationCodeAsync(dto) });
 
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDto dto)
+        => Ok(await _authService.LoginAsync(dto));
+
+    [HttpPost("verify-otp")]
+    public async Task<IActionResult> VerifyOtp(VerifyTwoFactorDto dto)
+        => Ok(await _authService.VerifyTwoFactorAsync(dto));
+
+    [HttpPost("toggle-2fa")]
+    [Authorize]
+    public async Task<IActionResult> ToggleTwoFactor(ToggleTwoFactorDto dto)
     {
-        var result = await _authService.LoginAsync(dto);
-        return Ok(result);
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(new { message = await _authService.ToggleTwoFactorAsync(userId, dto) });
     }
 
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
-    => Ok(await _authService.RefreshTokenAsync(dto));
+        => Ok(await _authService.RefreshTokenAsync(dto));
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+        => Ok(new { message = await _authService.ForgotPasswordAsync(dto) });
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+        => Ok(new { message = await _authService.ResetPasswordAsync(dto) });
 
     [HttpPost("change-password")]
     [Authorize]
@@ -52,7 +74,6 @@ public class AuthController : ControllerBase
         await _authService.LogoutAsync(userId, dto);
         return Ok(new { message = "Çıxış edildi." });
     }
-
 
     [HttpGet("me")]
     [Authorize]

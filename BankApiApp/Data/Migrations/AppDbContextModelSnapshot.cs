@@ -105,12 +105,21 @@ namespace BankApiApp.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("EmailConfirmationCode")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("EmailConfirmationCodeExpiry")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsTwoFactorEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
@@ -129,6 +138,12 @@ namespace BankApiApp.Data.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");
 
+                    b.Property<string>("PasswordResetCode")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("PasswordResetCodeExpiry")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("text");
 
@@ -137,6 +152,12 @@ namespace BankApiApp.Data.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
+
+                    b.Property<string>("TwoFactorCode")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("TwoFactorCodeExpiry")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
@@ -168,8 +189,8 @@ namespace BankApiApp.Data.Migrations
 
                     b.Property<string>("Action")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Changes")
                         .HasColumnType("text");

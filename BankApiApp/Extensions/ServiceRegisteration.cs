@@ -1,6 +1,7 @@
 ﻿using BankApiApp.Data;
 using BankApiApp.Data.Interceptors;
 using BankApiApp.Models;
+using BankApiApp.Models.Common;
 using BankApiApp.Services;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -27,6 +28,7 @@ public static class ServiceRegistration
         services.AddBackgroundJobs(configuration);
         services.AddAppDependencies();
         services.AddSwaggerDocumentation();
+        services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
 
         services.AddControllers();
         return services;
@@ -133,6 +135,7 @@ public static class ServiceRegistration
         services.AddScoped<ICardService, CardService>();
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<ILimitService, LimitService>();
+        services.AddScoped<IEmailService, EmailService>();
         return services;
     }
 
