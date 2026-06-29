@@ -45,4 +45,14 @@
         Completed = 2,
         Failed = 3
     }
+
+    public enum UtilityCategory
+    {
+        Electricity = 1,   // Elektrik
+        Water = 2,         // Su
+        Gas = 3,           // Qaz
+        Mobile = 4,        // Mobil
+        Internet = 5,      // İnternet
+        TV = 6             // Televiziya
+    }
 }

@@ -22,6 +22,8 @@ namespace BankApiApp.Data
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<Payment> Payments => Set<Payment>();
         public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+        public DbSet<UtilityProvider> UtilityProviders => Set<UtilityProvider>();
+        public DbSet<UtilityPayment> UtilityPayments => Set<UtilityPayment>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // VACİB: Identity cədvəllərini (Users, Roles və s.) qurur. Mütləq əvvəl çağırılır.
