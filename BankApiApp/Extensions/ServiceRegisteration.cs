@@ -136,6 +136,7 @@ public static class ServiceRegistration
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<ILimitService, LimitService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IUtilityService, UtilityService>();
         return services;
     }
 
