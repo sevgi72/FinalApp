@@ -1,6 +1,6 @@
-﻿namespace BankApiApp.DTOs.Auth;
+namespace BankApiApp.DTOs.Auth;
 
 public class ToggleTwoFactorDto
 {
-    public bool Enable { get; set; }   // true = aç, false = bağla
+    public bool Enable { get; set; }   // true = ac, false = bagla
 }

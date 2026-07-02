@@ -1,4 +1,4 @@
-﻿using BankApiApp.DTOs.Common;
+using BankApiApp.DTOs.Common;
 using BankApiApp.DTOs.Loan;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -49,6 +49,6 @@ public class LoanController : ControllerBase
     public async Task<IActionResult> ProcessPayments()
     {
         await _loanService.ProcessDuePaymentsAsync();
-        return Ok(new { message = "Vaxtı çatmış ödənişlər işləndi." });
+        return Ok(new { message = "Vaxti catmis odenisler islendi." });
     }
 }

@@ -1,12 +1,12 @@
-﻿namespace BankApiApp.DTOs.Analytics;
+namespace BankApiApp.DTOs.Analytics;
 
 public class DashboardDto
 {
-    public decimal TotalBalance { get; set; }      // bütün hesabların cəmi
+    public decimal TotalBalance { get; set; }      // butun hesablarin cemi
     public int AccountCount { get; set; }
-    public decimal TotalIncome { get; set; }        // ümumi gəlir
-    public decimal TotalExpense { get; set; }       // ümumi xərc
-    public decimal NetFlow { get; set; }            // gəlir - xərc
+    public decimal TotalIncome { get; set; }        // umumi gelir
+    public decimal TotalExpense { get; set; }       // umumi xerc
+    public decimal NetFlow { get; set; }            // gelir - xerc
     public int TransactionCount { get; set; }
     public List<MonthlySummaryDto> MonthlyBreakdown { get; set; } = new();
     public List<TypeSummaryDto> ByType { get; set; } = new();

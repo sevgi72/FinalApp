@@ -1,4 +1,4 @@
-﻿using BankApiApp.Data;
+using BankApiApp.Data;
 using BankApiApp.DTOs.Limits;
 using BankApiApp.Exceptions;
 using BankApiApp.Models;
@@ -10,7 +10,7 @@ public class LimitService : ILimitService
 {
     private readonly AppDbContext _context;
 
-    // standart limitlər (hesaba özəl limit qoyulmayıbsa bunlar tətbiq olunur)
+    // standart limitler (hesaba ozel limit qoyulmayibsa bunlar tetbiq olunur)
     public const decimal DefaultDailyLimit = 2000m;
     public const decimal DefaultMonthlyLimit = 20000m;
     public const decimal DefaultYearlyLimit = 200000m;
@@ -20,7 +20,7 @@ public class LimitService : ILimitService
         _context = context;
     }
 
-    // çıxarış/köçürmə öncəsi limit yoxlaması
+    // cixaris/kocurme oncesi limit yoxlamasi
     public async Task EnsureWithinLimitsAsync(Account account, decimal amount)
     {
         var (spentToday, spentMonth, spentYear) = await GetSpentAsync(account.Id);
@@ -31,22 +31,22 @@ public class LimitService : ILimitService
 
         if (spentToday + amount > daily)
             throw new BadRequestException(
-                $"Günlük limit aşıldı. Limit: {daily}, bu gün istifadə: {spentToday}, qalıq: {Math.Max(0, daily - spentToday)}.");
+                $"Gunluk limit asildi. Limit: {daily}, bu gun istifade: {spentToday}, qaliq: {Math.Max(0, daily - spentToday)}.");
 
         if (spentMonth + amount > monthly)
             throw new BadRequestException(
-                $"Aylıq limit aşıldı. Limit: {monthly}, bu ay istifadə: {spentMonth}, qalıq: {Math.Max(0, monthly - spentMonth)}.");
+                $"Ayliq limit asildi. Limit: {monthly}, bu ay istifade: {spentMonth}, qaliq: {Math.Max(0, monthly - spentMonth)}.");
 
         if (spentYear + amount > yearly)
             throw new BadRequestException(
-                $"İllik limit aşıldı. Limit: {yearly}, bu il istifadə: {spentYear}, qalıq: {Math.Max(0, yearly - spentYear)}.");
+                $"Illik limit asildi. Limit: {yearly}, bu il istifade: {spentYear}, qaliq: {Math.Max(0, yearly - spentYear)}.");
     }
 
     public async Task<LimitInfoDto> GetLimitInfoAsync(string userId, Guid accountId)
     {
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId)
-            ?? throw new NotFoundException("Hesab tapılmadı.");
+            ?? throw new NotFoundException("Hesab tapilmadi.");
 
         var (spentToday, spentMonth, spentYear) = await GetSpentAsync(account.Id);
 
@@ -73,10 +73,10 @@ public class LimitService : ILimitService
     {
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId)
-            ?? throw new NotFoundException("Hesab tapılmadı.");
+            ?? throw new NotFoundException("Hesab tapilmadi.");
 
         if (dto.DailyLimit < 0 || dto.MonthlyLimit < 0 || dto.YearlyLimit < 0)
-            throw new BadRequestException("Limit mənfi ola bilməz.");
+            throw new BadRequestException("Limit menfi ola bilmez.");
 
         account.DailyLimit = dto.DailyLimit;
         account.MonthlyLimit = dto.MonthlyLimit;
@@ -87,7 +87,7 @@ public class LimitService : ILimitService
         return await GetLimitInfoAsync(userId, accountId);
     }
 
-    // --- köməkçi: bu hesabdan gün/ay/il ərzində çıxan (xərclənən) məbləğlər ---
+    // --- komekci: bu hesabdan gun/ay/il erzinde cixan (xerclenen) meblegler ---
     private async Task<(decimal today, decimal month, decimal year)> GetSpentAsync(Guid accountId)
     {
         var now = DateTime.UtcNow;
@@ -95,7 +95,7 @@ public class LimitService : ILimitService
         var monthStart = DateTime.SpecifyKind(new DateTime(now.Year, now.Month, 1), DateTimeKind.Utc);
         var yearStart = DateTime.SpecifyKind(new DateTime(now.Year, 1, 1), DateTimeKind.Utc);
 
-        // çıxan (outgoing) tamamlanmış əməliyyatlar
+        // cixan (outgoing) tamamlanmis emeliyyatlar
         var outgoing = _context.Transactions
             .Where(t => t.FromAccountId == accountId && t.Status == TransactionStatus.Completed);
 

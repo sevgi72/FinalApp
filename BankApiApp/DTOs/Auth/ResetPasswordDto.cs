@@ -1,21 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace BankApiApp.DTOs.Auth;
 
 public class ResetPasswordDto
 {
-    [Required(ErrorMessage = "Email mütləqdir.")]
-    [EmailAddress(ErrorMessage = "Email formatı yanlışdır.")]
+    [Required(ErrorMessage = "Email mutleqdir.")]
+    [EmailAddress(ErrorMessage = "Email formati yanlisdir.")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Kod mütləqdir.")]
+    [Required(ErrorMessage = "Kod mutleqdir.")]
     public string Code { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Yeni parol mütləqdir.")]
-    [MinLength(6, ErrorMessage = "Yeni parol ən azı 6 simvol olmalıdır.")]
+    [Required(ErrorMessage = "Yeni parol mutleqdir.")]
+    [MinLength(6, ErrorMessage = "Yeni parol en azi 6 simvol olmalidir.")]
     public string NewPassword { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Yeni parol təkrarı mütləqdir.")]
-    [Compare(nameof(NewPassword), ErrorMessage = "Yeni parollar uyğun gəlmir.")]
+    [Required(ErrorMessage = "Yeni parol tekrari mutleqdir.")]
+    [Compare(nameof(NewPassword), ErrorMessage = "Yeni parollar uygun gelmir.")]
     public string ConfirmNewPassword { get; set; } = string.Empty;
 }

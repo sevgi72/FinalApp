@@ -1,4 +1,4 @@
-﻿using BankApiApp.Models;
+using BankApiApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -11,11 +11,11 @@ public class AuditInterceptor : SaveChangesInterceptor
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    // audit-ə YAZILMAYACAQ həssas sahələr (təhlükəsizlik)
+    // audit-e YAZILMAYACAQ hessas saheler (tehlukesizlik)
     private static readonly HashSet<string> SensitiveFields = new(StringComparer.OrdinalIgnoreCase)
     {
         "PasswordHash", "SecurityStamp", "ConcurrencyStamp", "Token",
-        "Version"   // xmin concurrency token — mənasızdır audit üçün
+        "Version"   // xmin concurrency token — menasizdir audit ucun
     };
 
     public AuditInterceptor(IHttpContextAccessor httpContextAccessor)
@@ -23,7 +23,7 @@ public class AuditInterceptor : SaveChangesInterceptor
         _httpContextAccessor = httpContextAccessor;
     }
 
-    // SaveChanges baş verməzdən ƏVVƏL araya gir
+    // SaveChanges bas vermezden EVVEL araya gir
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData, InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
@@ -37,7 +37,7 @@ public class AuditInterceptor : SaveChangesInterceptor
 
     private void AddAuditLogs(DbContext context)
     {
-        // cari istifadəçi + IP (HTTP sorğusundan)
+        // cari istifadeci + IP (HTTP sorgusundan)
         var httpContext = _httpContextAccessor.HttpContext;
         var userId = httpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
         var userEmail = httpContext?.User?.FindFirstValue(ClaimTypes.Email);
@@ -46,14 +46,14 @@ public class AuditInterceptor : SaveChangesInterceptor
 
         var auditEntries = new List<AuditLog>();
 
-        // ChangeTracker-də dəyişən bütün entity-lərə bax
+        // ChangeTracker-de deyisen butun entity-lere bax
         foreach (var entry in context.ChangeTracker.Entries())
         {
-            // AuditLog-un özünü loglama (sonsuz dövr olmasın)
+            // AuditLog-un ozunu loglama (sonsuz dovr olmasin)
             if (entry.Entity is AuditLog)
                 continue;
 
-            // yalnız əlavə/dəyişmə/silmə (dəyişməyənləri keç)
+            // yalniz elave/deyisme/silme (deyismeyenleri kec)
             if (entry.State != EntityState.Added &&
                 entry.State != EntityState.Modified &&
                 entry.State != EntityState.Deleted)
@@ -82,12 +82,12 @@ public class AuditInterceptor : SaveChangesInterceptor
             });
         }
 
-        // audit qeydlərini context-ə əlavə et (eyni SaveChanges-də yazılacaq)
+        // audit qeydlerini context-e elave et (eyni SaveChanges-de yazilacaq)
         if (auditEntries.Count > 0)
             context.Set<AuditLog>().AddRange(auditEntries);
     }
 
-    // dəyişən sahələri köhnə→yeni kimi JSON-a yığ (həssasları çıxararaq)
+    // deyisen saheleri kohne→yeni kimi JSON-a yig (hessaslari cixararaq)
     private static string? BuildChanges(EntityEntry entry)
     {
         var dict = new Dictionary<string, object?>();
@@ -96,7 +96,7 @@ public class AuditInterceptor : SaveChangesInterceptor
         {
             var name = prop.Metadata.Name;
 
-            // həssas sahələri atla
+            // hessas saheleri atla
             if (SensitiveFields.Contains(name))
                 continue;
 
@@ -110,7 +110,7 @@ public class AuditInterceptor : SaveChangesInterceptor
             }
             else if (entry.State == EntityState.Modified && prop.IsModified)
             {
-                // yalnız dəyişən sahələr: köhnə → yeni
+                // yalniz deyisen saheler: kohne → yeni
                 dict[name] = new { old = prop.OriginalValue, @new = prop.CurrentValue };
             }
         }
@@ -124,7 +124,7 @@ public class AuditInterceptor : SaveChangesInterceptor
         });
     }
 
-    // entity-nin Id-sini tapmağa çalış
+    // entity-nin Id-sini tapmaga calis
     private static string? TryGetEntityId(EntityEntry entry)
     {
         var idProp = entry.Properties.FirstOrDefault(p => p.Metadata.Name == "Id");

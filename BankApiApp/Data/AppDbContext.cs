@@ -1,4 +1,4 @@
-﻿using BankApiApp.Models;
+using BankApiApp.Models;
 using BankApiApp.Models.Common;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +13,7 @@ namespace BankApiApp.Data
         {
         }
 
-        // Cədvəllərimiz
+        // Cedvellerimiz
         public DbSet<Account> Accounts => Set<Account>();
         public DbSet<Transaction> Transactions => Set<Transaction>();
         public DbSet<Card> Cards => Set<Card>();
@@ -24,16 +24,17 @@ namespace BankApiApp.Data
         public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
         public DbSet<UtilityProvider> UtilityProviders => Set<UtilityProvider>();
         public DbSet<UtilityPayment> UtilityPayments => Set<UtilityPayment>();
+        public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // VACİB: Identity cədvəllərini (Users, Roles və s.) qurur. Mütləq əvvəl çağırılır.
+            // VACIB: Identity cedvellerini (Users, Roles ve s.) qurur. Mutleq evvel cagirilir.
             base.OnModelCreating(modelBuilder);
 
-            // Bütün IEntityTypeConfiguration siniflərini avtomatik tapıb tətbiq edir
+            // Butun IEntityTypeConfiguration siniflerini avtomatik tapib tetbiq edir
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         }
 
-        // Tarixləri avtomatik dolduran override
+        // Tarixleri avtomatik dolduran override
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             foreach (var entry in ChangeTracker.Entries<IAuditableEntity>())

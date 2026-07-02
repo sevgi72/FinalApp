@@ -1777,7 +1777,7 @@
     "securitySchemes": {
       "Bearer": {
         "type": "http",
-        "description": "Token-i bura yapışdır (Bearer yazma, sadəcə token)",
+        "description": "Token-i bura yapisdir (Bearer yazma, sadece token)",
         "scheme": "Bearer",
         "bearerFormat": "JWT"
       }

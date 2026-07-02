@@ -1,4 +1,4 @@
-﻿using BankApiApp.Data;
+using BankApiApp.Data;
 using BankApiApp.DTOs.Account;
 using BankApiApp.DTOs.Auth;
 using BankApiApp.Exceptions;
@@ -40,7 +40,7 @@ public class AuthService : IAuthService
     {
         var existing = await _userManager.FindByEmailAsync(dto.Email);
         if (existing != null)
-            throw new BadRequestException("Bu email artıq qeydiyyatdan keçib.");
+            throw new BadRequestException("Bu email artiq qeydiyyatdan kecib.");
 
         var user = new ApplicationUser
         {
@@ -62,36 +62,36 @@ public class AuthService : IAuthService
 
         await _emailService.SendAsync(
             user.Email!,
-            "Email təsdiqi - BankApiApp",
+            "Email tesdiqi - BankApiApp",
             EmailTemplates.EmailConfirmation(user.FullName, code));
 
         await _auditService.LogManualAsync("Register", "Yeni qeydiyyat.", user.Id, user.Email);
 
-        return "Qeydiyyat uğurludur. Email ünvanınıza göndərilən kodu təsdiqləyin.";
+        return "Qeydiyyat ugurludur. Email unvaniniza gonderilen kodu tesdiqleyin.";
     }
 
     public async Task<string> ConfirmEmailAsync(ConfirmEmailDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email)
-            ?? throw new NotFoundException("İstifadəçi tapılmadı.");
+            ?? throw new NotFoundException("Istifadeci tapilmadi.");
 
         if (user.EmailConfirmed)
-            return "Email artıq təsdiqlənib.";
+            return "Email artiq tesdiqlenib.";
 
         if (user.EmailConfirmationCode != dto.Code)
-            throw new BadRequestException("Təsdiq kodu yanlışdır.");
+            throw new BadRequestException("Tesdiq kodu yanlisdir.");
 
         if (user.EmailConfirmationCodeExpiry < DateTime.UtcNow)
-            throw new BadRequestException("Təsdiq kodunun vaxtı bitib. Yenidən kod tələb edin.");
+            throw new BadRequestException("Tesdiq kodunun vaxti bitib. Yeniden kod teleb edin.");
 
         user.EmailConfirmed = true;
         user.EmailConfirmationCode = null;
         user.EmailConfirmationCodeExpiry = null;
         await _userManager.UpdateAsync(user);
 
-        await _auditService.LogManualAsync("EmailConfirmed", "Email təsdiqləndi.", user.Id, user.Email);
+        await _auditService.LogManualAsync("EmailConfirmed", "Email tesdiqlendi.", user.Id, user.Email);
 
-        return "Email uğurla təsdiqləndi. İndi daxil ola bilərsiniz.";
+        return "Email ugurla tesdiqlendi. Indi daxil ola bilersiniz.";
     }
 
     public async Task<string> ResendConfirmationCodeAsync(ResendCodeDto dto)
@@ -99,7 +99,7 @@ public class AuthService : IAuthService
         var user = await _userManager.FindByEmailAsync(dto.Email);
 
         if (user == null || user.EmailConfirmed)
-            return "Əgər email mövcud və təsdiqlənməyibsə, yeni kod göndərildi.";
+            return "Eger email movcud ve tesdiqlenmeyibse, yeni kod gonderildi.";
 
         var code = GenerateCode();
         user.EmailConfirmationCode = code;
@@ -108,10 +108,10 @@ public class AuthService : IAuthService
 
         await _emailService.SendAsync(
             user.Email!,
-            "Email təsdiqi (yeni kod) - BankApiApp",
+            "Email tesdiqi (yeni kod) - BankApiApp",
             EmailTemplates.EmailConfirmation(user.FullName, code));
 
-        return "Əgər email mövcud və təsdiqlənməyibsə, yeni kod göndərildi.";
+        return "Eger email movcud ve tesdiqlenmeyibse, yeni kod gonderildi.";
     }
 
     public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
@@ -119,21 +119,21 @@ public class AuthService : IAuthService
         var user = await _userManager.FindByEmailAsync(dto.Email);
         if (user == null)
         {
-            await _auditService.LogManualAsync("LoginFailed", $"Mövcud olmayan email: {dto.Email}");
-            throw new BadRequestException("Email və ya parol yanlışdır.");
+            await _auditService.LogManualAsync("LoginFailed", $"Movcud olmayan email: {dto.Email}");
+            throw new BadRequestException("Email ve ya parol yanlisdir.");
         }
 
         var valid = await _userManager.CheckPasswordAsync(user, dto.Password);
         if (!valid)
         {
-            await _auditService.LogManualAsync("LoginFailed", "Yanlış parol.", user.Id, user.Email);
-            throw new BadRequestException("Email və ya parol yanlışdır.");
+            await _auditService.LogManualAsync("LoginFailed", "Yanlis parol.", user.Id, user.Email);
+            throw new BadRequestException("Email ve ya parol yanlisdir.");
         }
 
         if (!user.EmailConfirmed)
         {
-            await _auditService.LogManualAsync("LoginBlocked", "Təsdiqlənməmiş email.", user.Id, user.Email);
-            throw new BadRequestException("Email təsdiqlənməyib. Zəhmət olmasa əvvəlcə emailinizi təsdiqləyin.");
+            await _auditService.LogManualAsync("LoginBlocked", "Tesdiqlenmemis email.", user.Id, user.Email);
+            throw new BadRequestException("Email tesdiqlenmeyib. Zehmet olmasa evvelce emailinizi tesdiqleyin.");
         }
 
         if (user.IsTwoFactorEnabled)
@@ -145,38 +145,38 @@ public class AuthService : IAuthService
 
             await _emailService.SendAsync(
                 user.Email!,
-                "Giriş təsdiqi (OTP) - BankApiApp",
+                "Giris tesdiqi (OTP) - BankApiApp",
                 EmailTemplates.TwoFactorCode(user.FullName, otp));
 
-            await _auditService.LogManualAsync("TwoFactorRequested", "OTP göndərildi.", user.Id, user.Email);
+            await _auditService.LogManualAsync("TwoFactorRequested", "OTP gonderildi.", user.Id, user.Email);
 
             return new AuthResponseDto
             {
                 RequiresTwoFactor = true,
-                Message = "Email ünvanınıza giriş kodu göndərildi. Kodu daxil edin."
+                Message = "Email unvaniniza giris kodu gonderildi. Kodu daxil edin."
             };
         }
 
-        await _auditService.LogManualAsync("Login", "Uğurlu giriş.", user.Id, user.Email);
+        await _auditService.LogManualAsync("Login", "Ugurlu giris.", user.Id, user.Email);
         return await BuildAuthResponseAsync(user);
     }
 
     public async Task<AuthResponseDto> VerifyTwoFactorAsync(VerifyTwoFactorDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email)
-            ?? throw new BadRequestException("Kod yanlışdır və ya vaxtı bitib.");
+            ?? throw new BadRequestException("Kod yanlisdir ve ya vaxti bitib.");
 
         if (user.TwoFactorCode != dto.Code || user.TwoFactorCodeExpiry < DateTime.UtcNow)
         {
-            await _auditService.LogManualAsync("TwoFactorFailed", "Yanlış OTP.", user.Id, user.Email);
-            throw new BadRequestException("Kod yanlışdır və ya vaxtı bitib.");
+            await _auditService.LogManualAsync("TwoFactorFailed", "Yanlis OTP.", user.Id, user.Email);
+            throw new BadRequestException("Kod yanlisdir ve ya vaxti bitib.");
         }
 
         user.TwoFactorCode = null;
         user.TwoFactorCodeExpiry = null;
         await _userManager.UpdateAsync(user);
 
-        await _auditService.LogManualAsync("Login", "Uğurlu giriş (2FA).", user.Id, user.Email);
+        await _auditService.LogManualAsync("Login", "Ugurlu giris (2FA).", user.Id, user.Email);
 
         return await BuildAuthResponseAsync(user);
     }
@@ -184,26 +184,26 @@ public class AuthService : IAuthService
     public async Task<string> ToggleTwoFactorAsync(string userId, ToggleTwoFactorDto dto)
     {
         var user = await _userManager.FindByIdAsync(userId)
-            ?? throw new NotFoundException("İstifadəçi tapılmadı.");
+            ?? throw new NotFoundException("Istifadeci tapilmadi.");
 
         user.IsTwoFactorEnabled = dto.Enable;
         await _userManager.UpdateAsync(user);
 
         await _auditService.LogManualAsync(
             dto.Enable ? "TwoFactorEnabled" : "TwoFactorDisabled",
-            dto.Enable ? "2FA aktivləşdirildi." : "2FA söndürüldü.",
+            dto.Enable ? "2FA aktivlesdirildi." : "2FA sonduruldu.",
             user.Id, user.Email);
 
         return dto.Enable
-            ? "İki mərhələli doğrulama aktivləşdirildi."
-            : "İki mərhələli doğrulama söndürüldü.";
+            ? "Iki merheleli dogrulama aktivlesdirildi."
+            : "Iki merheleli dogrulama sonduruldu.";
     }
 
     // --- GOOGLE LOGIN (yeni) ---
 
     public async Task<AuthResponseDto> GoogleLoginAsync(GoogleLoginDto dto)
     {
-        // 1. Google ID token-i yoxla (imza + bizim Client ID-yə aid olub-olmadığı)
+        // 1. Google ID token-i yoxla (imza + bizim Client ID-ye aid olub-olmadigi)
         GoogleJsonWebSignature.Payload payload;
         try
         {
@@ -215,26 +215,26 @@ public class AuthService : IAuthService
         }
         catch
         {
-            throw new BadRequestException("Google token etibarsızdır.");
+            throw new BadRequestException("Google token etibarsizdir.");
         }
 
-        // 2. Token-dən məlumatları çıxar
+        // 2. Token-den melumatlari cixar
         var email = payload.Email;
         var fullName = payload.Name ?? email;
-        var googleId = payload.Subject;   // Google-un unikal istifadəçi ID-si
+        var googleId = payload.Subject;   // Google-un unikal istifadeci ID-si
 
-        // 3. İstifadəçi bazada var? (email üzrə)
+        // 3. Istifadeci bazada var? (email uzre)
         var user = await _userManager.FindByEmailAsync(email);
 
         if (user == null)
         {
-            // YOXDUR → yeni yarat (parolsuz, email təsdiqli — Google onsuz təsdiqləyib)
+            // YOXDUR → yeni yarat (parolsuz, email tesdiqli — Google onsuz tesdiqleyib)
             user = new ApplicationUser
             {
                 FullName = fullName,
                 Email = email,
                 UserName = email,
-                EmailConfirmed = true,      // Google emaili təsdiqləyib
+                EmailConfirmed = true,      // Google emaili tesdiqleyib
                 GoogleId = googleId
             };
 
@@ -243,22 +243,22 @@ public class AuthService : IAuthService
                 throw new BadRequestException(string.Join("; ", result.Errors.Select(e => e.Description)));
 
             await _userManager.AddToRoleAsync(user, "Customer");
-            await _auditService.LogManualAsync("GoogleRegister", "Google ilə qeydiyyat.", user.Id, user.Email);
+            await _auditService.LogManualAsync("GoogleRegister", "Google ile qeydiyyat.", user.Id, user.Email);
         }
         else
         {
-            // VAR → mövcud hesaba Google-u bağla (əgər hələ bağlı deyilsə)
+            // VAR → movcud hesaba Google-u bagla (eger hele bagli deyilse)
             if (string.IsNullOrEmpty(user.GoogleId))
             {
                 user.GoogleId = googleId;
-                user.EmailConfirmed = true;   // Google ilə girirsə email təsdiqlidir
+                user.EmailConfirmed = true;   // Google ile girirse email tesdiqlidir
                 await _userManager.UpdateAsync(user);
             }
         }
 
-        await _auditService.LogManualAsync("GoogleLogin", "Google ilə giriş.", user.Id, user.Email);
+        await _auditService.LogManualAsync("GoogleLogin", "Google ile giris.", user.Id, user.Email);
 
-        // 4. Bizim öz JWT token-imizi ver
+        // 4. Bizim oz JWT token-imizi ver
         return await BuildAuthResponseAsync(user);
     }
 
@@ -269,7 +269,7 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(rt => rt.Token == dto.RefreshToken);
 
         if (stored == null || stored.IsRevoked || stored.ExpiresAt < DateTime.UtcNow)
-            throw new BadRequestException("Refresh token etibarsızdır və ya vaxtı bitib.");
+            throw new BadRequestException("Refresh token etibarsizdir ve ya vaxti bitib.");
 
         stored.IsRevoked = true;
         await _context.SaveChangesAsync();
@@ -281,7 +281,7 @@ public class AuthService : IAuthService
     {
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
-            throw new NotFoundException("İstifadəçi tapılmadı.");
+            throw new NotFoundException("Istifadeci tapilmadi.");
 
         var result = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
         if (!result.Succeeded)
@@ -294,7 +294,7 @@ public class AuthService : IAuthService
             t.IsRevoked = true;
         await _context.SaveChangesAsync();
 
-        await _auditService.LogManualAsync("PasswordChanged", "Parol dəyişdirildi.", userId);
+        await _auditService.LogManualAsync("PasswordChanged", "Parol deyisdirildi.", userId);
     }
 
     public async Task<string> ForgotPasswordAsync(ForgotPasswordDto dto)
@@ -302,7 +302,7 @@ public class AuthService : IAuthService
         var user = await _userManager.FindByEmailAsync(dto.Email);
 
         if (user == null)
-            return "Əgər bu email qeydiyyatdadırsa, sıfırlama kodu göndərildi.";
+            return "Eger bu email qeydiyyatdadirsa, sifirlama kodu gonderildi.";
 
         var code = GenerateCode();
         user.PasswordResetCode = code;
@@ -311,21 +311,21 @@ public class AuthService : IAuthService
 
         await _emailService.SendAsync(
             user.Email!,
-            "Parol sıfırlama - BankApiApp",
+            "Parol sifirlama - BankApiApp",
             EmailTemplates.PasswordReset(user.FullName, code));
 
-        await _auditService.LogManualAsync("PwdResetRequest", "Parol sıfırlama tələb edildi.", user.Id, user.Email);
+        await _auditService.LogManualAsync("PwdResetRequest", "Parol sifirlama teleb edildi.", user.Id, user.Email);
 
-        return "Əgər bu email qeydiyyatdadırsa, sıfırlama kodu göndərildi.";
+        return "Eger bu email qeydiyyatdadirsa, sifirlama kodu gonderildi.";
     }
 
     public async Task<string> ResetPasswordAsync(ResetPasswordDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email)
-            ?? throw new BadRequestException("Kod yanlışdır və ya vaxtı bitib.");
+            ?? throw new BadRequestException("Kod yanlisdir ve ya vaxti bitib.");
 
         if (user.PasswordResetCode != dto.Code || user.PasswordResetCodeExpiry < DateTime.UtcNow)
-            throw new BadRequestException("Kod yanlışdır və ya vaxtı bitib.");
+            throw new BadRequestException("Kod yanlisdir ve ya vaxti bitib.");
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
@@ -343,9 +343,9 @@ public class AuthService : IAuthService
             t.IsRevoked = true;
         await _context.SaveChangesAsync();
 
-        await _auditService.LogManualAsync("PasswordReset", "Parol sıfırlandı.", user.Id, user.Email);
+        await _auditService.LogManualAsync("PasswordReset", "Parol sifirlandi.", user.Id, user.Email);
 
-        return "Parol uğurla sıfırlandı. İndi yeni parolla daxil ola bilərsiniz.";
+        return "Parol ugurla sifirlandi. Indi yeni parolla daxil ola bilersiniz.";
     }
 
     public async Task LogoutAsync(string userId, RefreshTokenRequestDto dto)
@@ -363,7 +363,7 @@ public class AuthService : IAuthService
     public async Task<ProfileDto> GetProfileAsync(string userId)
     {
         var user = await _userManager.FindByIdAsync(userId)
-            ?? throw new NotFoundException("İstifadəçi tapılmadı.");
+            ?? throw new NotFoundException("Istifadeci tapilmadi.");
 
         var roles = await _userManager.GetRolesAsync(user);
 
@@ -382,7 +382,7 @@ public class AuthService : IAuthService
         };
     }
 
-    // --- köməkçi metodlar ---
+    // --- komekci metodlar ---
 
     private async Task<AuthResponseDto> BuildAuthResponseAsync(ApplicationUser user)
     {

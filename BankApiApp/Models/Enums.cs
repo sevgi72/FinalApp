@@ -1,9 +1,9 @@
-﻿namespace BankApiApp.Models
+namespace BankApiApp.Models
 {
     public enum AccountType
     {
         Checking = 1,   // cari hesab
-        Savings = 2     // əmanət hesabı
+        Savings = 2     // emanet hesabi
     }
 
     public enum AccountStatus
@@ -15,9 +15,9 @@
 
     public enum TransactionType
     {
-        Deposit = 1,    // pul yatırma
-        Withdraw = 2,   // pul çıxarma
-        Transfer = 3    // köçürmə
+        Deposit = 1,    // pul yatirma
+        Withdraw = 2,   // pul cixarma
+        Transfer = 3    // kocurme
     }
 
     public enum TransactionStatus
@@ -28,10 +28,10 @@
     }
     public enum LoanStatus
     {
-        Pending = 1,    // müraciət edilib, admin təsdiqini gözləyir
-        Active = 2,     // təsdiqlənib, ödənilir
-        Rejected = 3,   // rədd edilib
-        Completed = 4   // tam ödənilib, bitdi
+        Pending = 1,    // muraciet edilib, admin tesdiqini gozleyir
+        Active = 2,     // tesdiqlenib, odenilir
+        Rejected = 3,   // redd edilib
+        Completed = 4   // tam odenilib, bitdi
     }
     public enum CardStatus
     {
@@ -52,7 +52,7 @@
         Water = 2,         // Su
         Gas = 3,           // Qaz
         Mobile = 4,        // Mobil
-        Internet = 5,      // İnternet
+        Internet = 5,      // Internet
         TV = 6             // Televiziya
     }
 }

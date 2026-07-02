@@ -1,6 +1,6 @@
-﻿namespace BankApiApp.Exceptions;
+namespace BankApiApp.Exceptions;
 
-// bütün öz xətalarımızın bazası — status kodunu özü daşıyır
+// butun oz xetalarimizin bazasi — status kodunu ozu dasiyir
 public abstract class AppException : Exception
 {
     public int StatusCode { get; }

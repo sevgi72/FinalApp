@@ -1,4 +1,4 @@
-﻿namespace BankApiApp.DTOs.Transactions;
+namespace BankApiApp.DTOs.Transactions;
 
 public class ReceiptDto
 {
@@ -7,7 +7,7 @@ public class ReceiptDto
     public string Type { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public decimal Amount { get; set; }
-    public string? FromAccount { get; set; }   // maskalı hesab nömrəsi
+    public string? FromAccount { get; set; }   // maskali hesab nomresi
     public string? ToAccount { get; set; }
     public string? Description { get; set; }
 }

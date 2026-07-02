@@ -8,12 +8,13 @@ using Hangfire;
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
-// Bütün servis qeydiyyatları bir sətirdə
+// Butun servis qeydiyyatlari bir setirde
 builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 app.UseMiddleware<ExceptionMiddleware>();
-// Rolları və admin istifadəçisini seed et
+// Rollari ve admin istifadecisini seed et
 using (var scope = app.Services.CreateScope())
 {
     await DbSeeder.SeedAsync(scope.ServiceProvider);
@@ -28,7 +29,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHangfireDashboard("/hangfire");
 
-// Təkrarlanan iş: hər gün vaxtı çatmış kredit ödənişlərini tut
+// Tekrarlanan is: her gun vaxti catmis kredit odenislerini tut
 RecurringJob.AddOrUpdate<ILoanService>(
     "process-loan-payments",
     service => service.ProcessDuePaymentsAsync(),
@@ -36,6 +37,6 @@ RecurringJob.AddOrUpdate<ILoanService>(
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.MapHub<BankApiApp.Hubs.ChatHub>("/chatHub");
 app.MapControllers();
 app.Run();

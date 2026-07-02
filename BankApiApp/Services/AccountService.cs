@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BankApiApp.Data;
 using BankApiApp.DTOs.Account;
 using BankApiApp.Exceptions;
@@ -51,7 +51,7 @@ public class AccountService : IAccountService
             .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId);
 
         if (account == null)
-            throw new NotFoundException("Hesab tapılmadı.");
+            throw new NotFoundException("Hesab tapilmadi.");
 
         return _mapper.Map<AccountDto>(account);
     }

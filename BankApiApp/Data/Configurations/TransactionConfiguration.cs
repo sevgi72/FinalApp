@@ -1,4 +1,4 @@
-﻿using BankApiApp.Models;
+using BankApiApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -19,7 +19,7 @@ namespace BankApiApp.Data.Configurations
             builder.Property(t => t.Type).HasConversion<string>().HasMaxLength(20);
             builder.Property(t => t.Status).HasConversion<string>().HasMaxLength(20);
 
-            // Göndərən hesab
+            // Gonderen hesab
             builder.HasOne(t => t.FromAccount)
                 .WithMany()
                 .HasForeignKey(t => t.FromAccountId)

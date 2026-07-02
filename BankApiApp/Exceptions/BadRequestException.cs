@@ -1,6 +1,6 @@
-﻿namespace BankApiApp.Exceptions;
+namespace BankApiApp.Exceptions;
 
-// 400 — biznes qaydası pozulub (balans çatmır, sahib deyil, yanlış parol və s.)
+// 400 — biznes qaydasi pozulub (balans catmir, sahib deyil, yanlis parol ve s.)
 public class BadRequestException : AppException
 {
     public BadRequestException(string message) : base(message, 400) { }

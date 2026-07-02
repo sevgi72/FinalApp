@@ -1,4 +1,4 @@
-﻿using BankApiApp.DTOs.Account;
+using BankApiApp.DTOs.Account;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +8,7 @@ namespace BankApiApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]   // bütün endpoint-lər token tələb edir
+[Authorize]   // butun endpoint-ler token teleb edir
 public class AccountController : ControllerBase
 {
     private readonly IAccountService _accountService;
@@ -39,7 +39,7 @@ public class AccountController : ControllerBase
         return Ok(result);
     }
 
-    // token-dən cari istifadəçinin Id-sini çıxarır
+    // token-den cari istifadecinin Id-sini cixarir
     private string GetUserId() =>
         User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 }

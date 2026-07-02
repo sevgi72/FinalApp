@@ -1,4 +1,4 @@
-﻿using BankApiApp.Models;
+using BankApiApp.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -18,15 +18,15 @@ public static class UtilityReceiptPdfGenerator
                 page.PageColor(Colors.White);
                 page.DefaultTextStyle(x => x.FontSize(11));
 
-                // başlıq
+                // basliq
                 page.Header().Column(col =>
                 {
                     col.Item().Text("BankApiApp").FontSize(20).Bold().FontColor("#0F6E56");
-                    col.Item().Text("Kommunal ödəniş qəbzi").FontSize(12).FontColor("#555555");
+                    col.Item().Text("Kommunal odenis qebzi").FontSize(12).FontColor("#555555");
                     col.Item().PaddingTop(5).LineHorizontal(1).LineColor("#5DCAA5");
                 });
 
-                // məzmun
+                // mezmun
                 page.Content().PaddingVertical(20).Column(col =>
                 {
                     col.Spacing(12);
@@ -43,7 +43,7 @@ public static class UtilityReceiptPdfGenerator
                     });
                     col.Item().Row(row =>
                     {
-                        row.RelativeItem().Text("Abunəçi kodu:").FontColor("#555555");
+                        row.RelativeItem().Text("Abuneci kodu:").FontColor("#555555");
                         row.RelativeItem().AlignRight().Text(payment.SubscriberCode);
                     });
                     col.Item().Row(row =>
@@ -61,7 +61,7 @@ public static class UtilityReceiptPdfGenerator
 
                     col.Item().Row(row =>
                     {
-                        row.RelativeItem().Text("Ödənilən məbləğ:").FontSize(13).Bold();
+                        row.RelativeItem().Text("Odenilen mebleg:").FontSize(13).Bold();
                         row.RelativeItem().AlignRight().Text($"{payment.Amount:0.00} AZN").FontSize(13).Bold().FontColor("#0F6E56");
                     });
                 });
@@ -69,7 +69,7 @@ public static class UtilityReceiptPdfGenerator
                 // alt
                 page.Footer().AlignCenter().Text(x =>
                 {
-                    x.Span("Qəbz nömrəsi: ").FontColor("#999999").FontSize(9);
+                    x.Span("Qebz nomresi: ").FontColor("#999999").FontSize(9);
                     x.Span(payment.Id.ToString("N")[..12].ToUpper()).FontColor("#999999").FontSize(9);
                 });
             });

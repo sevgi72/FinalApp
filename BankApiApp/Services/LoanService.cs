@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using BankApiApp.Data;
 using BankApiApp.DTOs.Common;
 using BankApiApp.DTOs.Loan;
@@ -13,7 +13,7 @@ public class LoanService : ILoanService
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
-    private const decimal AnnualInterestRate = 12m;  // bankın illik faizi (%)
+    private const decimal AnnualInterestRate = 12m;  // bankin illik faizi (%)
 
     public LoanService(AppDbContext context, IMapper mapper)
     {
@@ -24,16 +24,16 @@ public class LoanService : ILoanService
     public async Task<LoanDto> RequestLoanAsync(string userId, LoanRequestDto dto)
     {
         if (dto.Principal <= 0)
-            throw new BadRequestException("Kredit məbləği 0-dan böyük olmalıdır.");
+            throw new BadRequestException("Kredit meblegi 0-dan boyuk olmalidir.");
         if (dto.TermMonths <= 0)
-            throw new BadRequestException("Müddət 0-dan böyük olmalıdır.");
+            throw new BadRequestException("Muddet 0-dan boyuk olmalidir.");
 
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == dto.AccountId && a.OwnerId == userId);
         if (account == null)
-            throw new NotFoundException("Hesab tapılmadı.");
+            throw new NotFoundException("Hesab tapilmadi.");
 
-        // AMORTIZASIYA: aylıq ödəniş və ümumi məbləği hesabla
+        // AMORTIZASIYA: ayliq odenis ve umumi meblegi hesabla
         var (monthlyPayment, totalPayable) =
             CalculateAmortization(dto.Principal, AnnualInterestRate, dto.TermMonths);
 
@@ -46,7 +46,7 @@ public class LoanService : ILoanService
             MonthlyPayment = monthlyPayment,
             TotalPayable = totalPayable,
             RemainingBalance = totalPayable,
-            Status = LoanStatus.Pending      // hələ admin təsdiqi gözləyir
+            Status = LoanStatus.Pending      // hele admin tesdiqi gozleyir
         };
 
         _context.Loans.Add(loan);
@@ -55,16 +55,16 @@ public class LoanService : ILoanService
         return _mapper.Map<LoanDto>(loan);
     }
 
-    // Amortizasiya hesablaması
+    // Amortizasiya hesablamasi
     private (decimal monthlyPayment, decimal totalPayable) CalculateAmortization(
         decimal principal, decimal annualRate, int termMonths)
     {
         var rate = annualRate / 100m;          // 12% → 0.12
         var years = termMonths / 12m;          // 12 ay → 1 il
-        var interest = principal * rate * years; // faiz məbləği
-        var total = principal + interest;       // əsas + faiz
-        var monthly = Math.Round(total / termMonths, 2); // aylıq ödəniş
-        total = monthly * termMonths;           // yuvarlaqlaşdırmadan sonra tutarlı saxla
+        var interest = principal * rate * years; // faiz meblegi
+        var total = principal + interest;       // esas + faiz
+        var monthly = Math.Round(total / termMonths, 2); // ayliq odenis
+        total = monthly * termMonths;           // yuvarlaqlasdirmadan sonra tutarli saxla
         return (monthly, total);
     }
 
@@ -114,9 +114,9 @@ public class LoanService : ILoanService
             .FirstOrDefaultAsync(l => l.Id == loanId);
 
         if (loan == null)
-            throw new NotFoundException("Kredit tapılmadı.");
+            throw new NotFoundException("Kredit tapilmadi.");
         if (loan.Status != LoanStatus.Pending)
-            throw new BadRequestException("Yalnız gözləyən kredit təsdiqlənə bilər.");
+            throw new BadRequestException("Yalniz gozleyen kredit tesdiqlene biler.");
 
         await using var dbTx = await _context.Database.BeginTransactionAsync();
         try
@@ -124,7 +124,7 @@ public class LoanService : ILoanService
             loan.Status = LoanStatus.Active;
             loan.StartDate = DateTime.UtcNow;
 
-            // 1. krediti hesaba köçür (istifadəçi pulu alır)
+            // 1. krediti hesaba kocur (istifadeci pulu alir)
             loan.Account.Balance += loan.Principal;
             _context.Transactions.Add(new Transaction
             {
@@ -135,7 +135,7 @@ public class LoanService : ILoanService
                 Description = "Kredit verildi"
             });
 
-            // 2. ödəniş cədvəlini yarat (TermMonths sətir)
+            // 2. odenis cedvelini yarat (TermMonths setir)
             for (int i = 1; i <= loan.TermMonths; i++)
             {
                 _context.LoanPayments.Add(new LoanPayment
@@ -165,9 +165,9 @@ public class LoanService : ILoanService
     {
         var loan = await _context.Loans.FirstOrDefaultAsync(l => l.Id == loanId);
         if (loan == null)
-            throw new NotFoundException("Kredit tapılmadı.");
+            throw new NotFoundException("Kredit tapilmadi.");
         if (loan.Status != LoanStatus.Pending)
-            throw new BadRequestException("Yalnız gözləyən kredit rədd edilə bilər.");
+            throw new BadRequestException("Yalniz gozleyen kredit redd edile biler.");
 
         loan.Status = LoanStatus.Rejected;
         await _context.SaveChangesAsync();
@@ -178,7 +178,7 @@ public class LoanService : ILoanService
     {
         var now = DateTime.UtcNow;
 
-        // vaxtı çatmış, ödənilməmiş ödənişlər (aktiv kreditlər)
+        // vaxti catmis, odenilmemis odenisler (aktiv kreditler)
         var duePayments = await _context.LoanPayments
             .Include(p => p.Loan)
                 .ThenInclude(l => l.Account)
@@ -193,7 +193,7 @@ public class LoanService : ILoanService
             var loan = payment.Loan;
             var account = loan.Account;
 
-            // balans kifayət etmirsə bu dəfə keç (növbəti dövrdə yenidən cəhd)
+            // balans kifayet etmirse bu defe kec (novbeti dovrde yeniden cehd)
             if (account.Balance < payment.Amount)
                 continue;
 
@@ -211,10 +211,10 @@ public class LoanService : ILoanService
                     Type = TransactionType.Withdraw,
                     Status = TransactionStatus.Completed,
                     FromAccountId = account.Id,
-                    Description = $"Kredit ödənişi #{payment.PaymentNumber}"
+                    Description = $"Kredit odenisi #{payment.PaymentNumber}"
                 });
 
-                // bütün borc bitibsə kredit bağlanır
+                // butun borc bitibse kredit baglanir
                 if (loan.RemainingBalance <= 0)
                     loan.Status = LoanStatus.Completed;
 

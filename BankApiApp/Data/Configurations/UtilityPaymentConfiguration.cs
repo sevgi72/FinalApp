@@ -1,4 +1,4 @@
-﻿using BankApiApp.Models;
+using BankApiApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,7 +13,7 @@ public class UtilityPaymentConfiguration : IEntityTypeConfiguration<UtilityPayme
         builder.Property(p => p.Amount).HasColumnType("decimal(18,2)");
         builder.Property(p => p.Status).HasMaxLength(20);
 
-        // provayder əlaqəsi
+        // provayder elaqesi
         builder.HasOne(p => p.Provider)
             .WithMany()
             .HasForeignKey(p => p.ProviderId)

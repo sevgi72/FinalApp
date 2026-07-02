@@ -1,4 +1,4 @@
-﻿using BankApiApp.DTOs.Common;
+using BankApiApp.DTOs.Common;
 using BankApiApp.DTOs.Transactions;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -53,7 +53,7 @@ public class TransactionController : ControllerBase
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         await _transactionService.TransferByCardAsync(userId, dto);
-        return Ok(new { message = "Köçürmə uğurla tamamlandı." });
+        return Ok(new { message = "Kocurme ugurla tamamlandi." });
     }
 
     [HttpGet("{id}/receipt")]

@@ -1,35 +1,35 @@
-﻿using BankApiApp.Models.Common;
+using BankApiApp.Models.Common;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BankApiApp.Models;
 
-public class Loan : AuditableEntity   // Id + CreatedAt + UpdatedAt buradan gəlir
+public class Loan : AuditableEntity   // Id + CreatedAt + UpdatedAt buradan gelir
 {
-    // Krediti alan hesab: pul bura gəlir, aylıq ödənişlər buradan tutulur
+    // Krediti alan hesab: pul bura gelir, ayliq odenisler buradan tutulur
     public Guid AccountId { get; set; }
     public Account Account { get; set; } = null!;
 
     [Column(TypeName = "decimal(18,2)")]
-    public decimal Principal { get; set; }          // götürülən əsas məbləğ (məs. 1200)
+    public decimal Principal { get; set; }          // goturulen esas mebleg (mes. 1200)
 
     [Column(TypeName = "decimal(5,2)")]
-    public decimal InterestRate { get; set; }       // illik faiz % (məs. 10)
+    public decimal InterestRate { get; set; }       // illik faiz % (mes. 10)
 
-    public int TermMonths { get; set; }             // neçə ay (məs. 12)
-
-    [Column(TypeName = "decimal(18,2)")]
-    public decimal MonthlyPayment { get; set; }     // aylıq ödəniş — sistem hesablayır
+    public int TermMonths { get; set; }             // nece ay (mes. 12)
 
     [Column(TypeName = "decimal(18,2)")]
-    public decimal TotalPayable { get; set; }       // ümumi qaytarılacaq — sistem hesablayır
+    public decimal MonthlyPayment { get; set; }     // ayliq odenis — sistem hesablayir
 
     [Column(TypeName = "decimal(18,2)")]
-    public decimal RemainingBalance { get; set; }   // qalıq borc — hər ödənişdə azalır
+    public decimal TotalPayable { get; set; }       // umumi qaytarilacaq — sistem hesablayir
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal RemainingBalance { get; set; }   // qaliq borc — her odenisde azalir
 
     public LoanStatus Status { get; set; } = LoanStatus.Pending;
 
-    public DateTime? StartDate { get; set; }        // təsdiqlənmə tarixi (təsdiqlənənə qədər null)
+    public DateTime? StartDate { get; set; }        // tesdiqlenme tarixi (tesdiqlenene qeder null)
 
-    // Bu kreditin ödəniş cədvəli (12 ay → 12 sətir)
+    // Bu kreditin odenis cedveli (12 ay → 12 setir)
     public ICollection<LoanPayment> Payments { get; set; } = new List<LoanPayment>();
 }

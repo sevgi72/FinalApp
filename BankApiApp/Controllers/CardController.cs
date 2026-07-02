@@ -1,4 +1,4 @@
-﻿using BankApiApp.DTOs.Card;
+using BankApiApp.DTOs.Card;
 using BankApiApp.DTOs.Common;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -45,7 +45,7 @@ public class CardController : ControllerBase
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         await _cardService.BlockCardAsync(userId, id);
-        return Ok(new { message = "Kart bloklandı." });
+        return Ok(new { message = "Kart bloklandi." });
     }
 
     [HttpPost("{id}/unblock")]
@@ -53,6 +53,6 @@ public class CardController : ControllerBase
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         await _cardService.UnblockCardAsync(userId, id);
-        return Ok(new { message = "Kart aktivləşdirildi." });
+        return Ok(new { message = "Kart aktivlesdirildi." });
     }
 }

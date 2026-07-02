@@ -1,21 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace BankApiApp.DTOs.Auth;
 
 public class RegisterDto
 {
-    [Required(ErrorMessage = "Ad soyad mütləqdir.")]
+    [Required(ErrorMessage = "Ad soyad mutleqdir.")]
     public string FullName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Email mütləqdir.")]
-    [EmailAddress(ErrorMessage = "Email formatı yanlışdır.")]
+    [Required(ErrorMessage = "Email mutleqdir.")]
+    [EmailAddress(ErrorMessage = "Email formati yanlisdir.")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Parol mütləqdir.")]
-    [MinLength(6, ErrorMessage = "Parol ən azı 6 simvol olmalıdır.")]
+    [Required(ErrorMessage = "Parol mutleqdir.")]
+    [MinLength(6, ErrorMessage = "Parol en azi 6 simvol olmalidir.")]
     public string Password { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Parol təkrarı mütləqdir.")]
-    [Compare(nameof(Password), ErrorMessage = "Parollar uyğun gəlmir.")]
+    [Required(ErrorMessage = "Parol tekrari mutleqdir.")]
+    [Compare(nameof(Password), ErrorMessage = "Parollar uygun gelmir.")]
     public string ConfirmPassword { get; set; } = string.Empty;
 }

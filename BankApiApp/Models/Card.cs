@@ -1,10 +1,10 @@
-﻿using BankApiApp.Models.Common;
+using BankApiApp.Models.Common;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Principal;
 
 namespace BankApiApp.Models
 {
-    public class Card : AuditableEntity   // yalnız Id, tarix yoxdur
+    public class Card : AuditableEntity   // yalniz Id, tarix yoxdur
     {
         [Required]
         [MaxLength(16)]

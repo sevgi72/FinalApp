@@ -1,4 +1,4 @@
-﻿using BankApiApp.DTOs.Auth;
+using BankApiApp.DTOs.Auth;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -67,7 +67,7 @@ public class AuthController : ControllerBase
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         await _authService.ChangePasswordAsync(userId, dto);
-        return Ok(new { message = "Parol uğurla dəyişdirildi." });
+        return Ok(new { message = "Parol ugurla deyisdirildi." });
     }
 
     [HttpPost("logout")]
@@ -76,7 +76,7 @@ public class AuthController : ControllerBase
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         await _authService.LogoutAsync(userId, dto);
-        return Ok(new { message = "Çıxış edildi." });
+        return Ok(new { message = "Cixis edildi." });
     }
 
     [HttpGet("me")]

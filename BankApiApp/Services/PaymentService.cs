@@ -1,4 +1,4 @@
-﻿using BankApiApp.Data;
+using BankApiApp.Data;
 using BankApiApp.DTOs.Common;
 using BankApiApp.DTOs.Payment;
 using BankApiApp.DTOs.Payments;
@@ -20,33 +20,33 @@ public class PaymentService : IPaymentService
 
     public async Task<PaymentResultDto> TopUpAsync(string userId, TopUpDto dto)
     {
-        // 1. Hesabı tap + sahiblik yoxla
+        // 1. Hesabi tap + sahiblik yoxla
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == dto.AccountId)
-            ?? throw new NotFoundException("Hesab tapılmadı.");
+            ?? throw new NotFoundException("Hesab tapilmadi.");
 
         if (account.OwnerId != userId)
-            throw new BadRequestException("Bu hesab sizə aid deyil.");
+            throw new BadRequestException("Bu hesab size aid deyil.");
 
-        // 2. Məbləğ yoxlaması
+        // 2. Mebleg yoxlamasi
         if (dto.Amount <= 0)
-            throw new BadRequestException("Məbləğ sıfırdan böyük olmalıdır.");
+            throw new BadRequestException("Mebleg sifirdan boyuk olmalidir.");
 
-        // kart nömrəsini təmizlə (boşluqları sil)
+        // kart nomresini temizle (bosluqlari sil)
         var cardNumber = (dto.CardNumber ?? string.Empty).Replace(" ", "");
         var last4 = cardNumber.Length >= 4 ? cardNumber[^4..] : "0000";
 
-        // 3. Kart validasiyası — uğursuzsa Failed ödəniş logla və qaytar
+        // 3. Kart validasiyasi — ugursuzsa Failed odenis logla ve qaytar
         string? failure = ValidateCard(cardNumber, dto.ExpiryMonth, dto.ExpiryYear, dto.Cvv);
         if (failure != null)
             return await LogFailedAsync(account.Id, dto.Amount, last4, failure);
 
-        // 4. Ödəniş prosessoru simulyasiyası (kiçik ehtimalla rədd)
+        // 4. Odenis prosessoru simulyasiyasi (kicik ehtimalla redd)
         if (!SimulateBankApproval())
             return await LogFailedAsync(account.Id, dto.Amount, last4,
-                "Ödəniş bank tərəfindən rədd edildi.");
+                "Odenis bank terefinden redd edildi.");
 
-        // 5. Uğurlu: balansı artır + Deposit əməliyyatı + Payment logu (hamısı bir tranzaksiyada)
+        // 5. Ugurlu: balansi artir + Deposit emeliyyati + Payment logu (hamisi bir tranzaksiyada)
         await using var trx = await _context.Database.BeginTransactionAsync();
 
         account.Balance += dto.Amount;
@@ -56,7 +56,7 @@ public class PaymentService : IPaymentService
             Amount = dto.Amount,
             Type = TransactionType.Deposit,
             Status = TransactionStatus.Completed,
-            Description = $"Kartla balans artırma (**** {last4})",
+            Description = $"Kartla balans artirma (**** {last4})",
             ToAccountId = account.Id
         });
 
@@ -80,11 +80,11 @@ public class PaymentService : IPaymentService
             Reference = reference,
             Amount = dto.Amount,
             NewBalance = account.Balance,
-            Message = "Balans uğurla artırıldı."
+            Message = "Balans ugurla artirildi."
         };
     }
 
-    // --- köməkçi metodlar ---
+    // --- komekci metodlar ---
 
     private async Task<PaymentResultDto> LogFailedAsync(
         Guid accountId, decimal amount, string last4, string reason)
@@ -112,30 +112,30 @@ public class PaymentService : IPaymentService
         };
     }
 
-    // kartın formal düzgünlüyü
+    // kartin formal duzgunluyu
     private static string? ValidateCard(string cardNumber, int month, int year, string cvv)
     {
         if (string.IsNullOrWhiteSpace(cardNumber) || cardNumber.Length != 16 || !cardNumber.All(char.IsDigit))
-            return "Kart nömrəsi yanlışdır.";
+            return "Kart nomresi yanlisdir.";
 
         if (!IsLuhnValid(cardNumber))
-            return "Kart nömrəsi etibarsızdır (Luhn yoxlamasından keçmədi).";
+            return "Kart nomresi etibarsizdir (Luhn yoxlamasindan kecmedi).";
 
         if (month < 1 || month > 12)
-            return "Kartın bitmə ayı yanlışdır.";
+            return "Kartin bitme ayi yanlisdir.";
 
         if (string.IsNullOrWhiteSpace(cvv) || cvv.Length != 3 || !cvv.All(char.IsDigit))
-            return "CVV yanlışdır.";
+            return "CVV yanlisdir.";
 
-        // vaxtı keçməyibmi? (ayın sonuna qədər etibarlı)
+        // vaxti kecmeyibmi? (ayin sonuna qeder etibarli)
         var expiry = new DateTime(year, month, 1).AddMonths(1).AddDays(-1);
         if (expiry < DateTime.UtcNow.Date)
-            return "Kartın vaxtı keçib.";
+            return "Kartin vaxti kecib.";
 
-        return null;   // hər şey qaydasında
+        return null;   // her sey qaydasinda
     }
 
-    // Luhn yoxlaması — nömrə keçərlidirmi
+    // Luhn yoxlamasi — nomre kecerlidirmi
     private static bool IsLuhnValid(string number)
     {
         int sum = 0;
@@ -154,9 +154,9 @@ public class PaymentService : IPaymentService
         return sum % 10 == 0;
     }
 
-    // ödəniş prosessoru: ~90% uğur (real həyatdakı kimi bəzən rədd)
+    // odenis prosessoru: ~90% ugur (real heyatdaki kimi bezen redd)
     private static bool SimulateBankApproval()
-        => Random.Shared.Next(0, 10) > 0;   // 1/10 rədd
+        => Random.Shared.Next(0, 10) > 0;   // 1/10 redd
 
     private static string GenerateReference()
         => "PAY-" + Guid.NewGuid().ToString("N")[..12].ToUpper();

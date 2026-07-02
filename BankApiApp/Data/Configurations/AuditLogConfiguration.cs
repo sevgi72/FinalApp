@@ -1,4 +1,4 @@
-﻿using BankApiApp.Models;
+using BankApiApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,7 +13,7 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(a => a.Action).IsRequired().HasMaxLength(100);
         builder.Property(a => a.UserEmail).HasMaxLength(256);
         builder.Property(a => a.IpAddress).HasMaxLength(45);
-        // Changes uzun ola bilər → məhdudiyyət qoymuruq (text)
+        // Changes uzun ola biler → mehdudiyyet qoymuruq (text)
 
         builder.HasIndex(a => a.CreatedAt);
         builder.HasIndex(a => a.EntityName);

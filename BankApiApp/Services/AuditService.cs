@@ -1,4 +1,4 @@
-﻿using BankApiApp.Data;
+using BankApiApp.Data;
 using BankApiApp.DTOs.Audit;
 using BankApiApp.DTOs.Common;
 using BankApiApp.Extensions;
@@ -19,7 +19,7 @@ public class AuditService : IAuditService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    // əl ilə audit (login, uğursuz giriş kimi bazaya yazılmayan hadisələr üçün)
+    // el ile audit (login, ugursuz giris kimi bazaya yazilmayan hadiseler ucun)
     public async Task LogManualAsync(
         string action, string? details = null, string? userId = null, string? userEmail = null)
     {
@@ -28,9 +28,9 @@ public class AuditService : IAuditService
 
         _context.AuditLogs.Add(new AuditLog
         {
-            EntityName = "Auth",        // əl ilə hadisələr üçün
+            EntityName = "Auth",        // el ile hadiseler ucun
             Action = action,            // "Login", "LoginFailed", "PasswordChanged"...
-            Changes = details,          // əlavə açıqlama
+            Changes = details,          // elave aciqlama
             UserId = userId,
             UserEmail = userEmail,
             IpAddress = ip,

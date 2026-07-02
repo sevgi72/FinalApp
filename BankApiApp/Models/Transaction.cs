@@ -1,4 +1,4 @@
-﻿using BankApiApp.Models.Common;
+using BankApiApp.Models.Common;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Principal;
@@ -6,7 +6,7 @@ using System.Transactions;
 
 namespace BankApiApp.Models
 {
-    public class Transaction : AuditableEntity   // Id + CreatedAt buradan gəlir
+    public class Transaction : AuditableEntity   // Id + CreatedAt buradan gelir
     {
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }

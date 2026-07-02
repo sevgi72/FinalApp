@@ -1,19 +1,19 @@
-﻿using BankApiApp.DTOs.Common;
+using BankApiApp.DTOs.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace BankApiApp.Extensions;
 
 public static class QueryableExtensions
 {
-    // istənilən IQueryable-ı səhifələnmiş nəticəyə çevirir
+    // istenilen IQueryable-i sehifelenmis neticeye cevirir
     public static async Task<PagedResult<T>> ToPagedResultAsync<T>(
         this IQueryable<T> query, PaginationParams pagination)
     {
-        var totalCount = await query.CountAsync();   // ümumi say (Skip/Take-dən əvvəl)
+        var totalCount = await query.CountAsync();   // umumi say (Skip/Take-den evvel)
 
         var items = await query
-            .Skip((pagination.Page - 1) * pagination.PageSize)   // əvvəlki səhifələri keç
-            .Take(pagination.PageSize)                            // bu səhifəni götür
+            .Skip((pagination.Page - 1) * pagination.PageSize)   // evvelki sehifeleri kec
+            .Take(pagination.PageSize)                            // bu sehifeni gotur
             .ToListAsync();
 
         return new PagedResult<T>

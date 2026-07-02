@@ -1,4 +1,4 @@
-﻿using BankApiApp.DTOs;
+using BankApiApp.DTOs;
 using BankApiApp.DTOs.Common;
 using BankApiApp.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +31,7 @@ public class ExceptionMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
-        // status kodu xətanın tipinə görə seçilir
+        // status kodu xetanin tipine gore secilir
         var statusCode = ex switch
         {
             AppException appEx => appEx.StatusCode,
@@ -39,16 +39,16 @@ public class ExceptionMiddleware
             _ => StatusCodes.Status500InternalServerError
         };
 
-        // 500 = real bug → loglayırıq; toqquşma və biznes xətaları normaldır
+        // 500 = real bug → loglayiriq; toqqusma ve biznes xetalari normaldir
         if (statusCode == StatusCodes.Status500InternalServerError)
-            _logger.LogError(ex, "Gözlənilməyən xəta baş verdi.");
+            _logger.LogError(ex, "Gozlenilmeyen xeta bas verdi.");
 
-        // istifadəçiyə gedən mesaj
+        // istifadeciye geden mesaj
         var message = statusCode switch
         {
-            StatusCodes.Status500InternalServerError => "Daxili server xətası baş verdi.",
+            StatusCodes.Status500InternalServerError => "Daxili server xetasi bas verdi.",
             StatusCodes.Status409Conflict =>
-                "Əməliyyat eyni anda başqa dəyişikliklə toqquşdu. Zəhmət olmasa yenidən cəhd edin.",
+                "Emeliyyat eyni anda basqa deyisiklikle toqqusdu. Zehmet olmasa yeniden cehd edin.",
             _ => ex.Message
         };
 

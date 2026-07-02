@@ -1,4 +1,4 @@
-﻿using BankApiApp.DTOs.Common;
+using BankApiApp.DTOs.Common;
 using BankApiApp.DTOs.Utility;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -19,17 +19,17 @@ public class UtilityController : ControllerBase
         _utilityService = utilityService;
     }
 
-    // bütün provayderlər
+    // butun provayderler
     [HttpGet("providers")]
     public async Task<IActionResult> GetProviders()
         => Ok(await _utilityService.GetProvidersAsync());
 
-    // borc sorğusu
+    // borc sorgusu
     [HttpPost("debt")]
     public async Task<IActionResult> GetDebt(DebtInquiryDto dto)
         => Ok(await _utilityService.GetDebtAsync(dto));
 
-    // ödəniş
+    // odenis
     [HttpPost("pay")]
     public async Task<IActionResult> Pay(PayUtilityDto dto)
     {
@@ -37,7 +37,7 @@ public class UtilityController : ControllerBase
         return Ok(await _utilityService.PayAsync(userId, dto));
     }
 
-    // ödəniş tarixçəsi
+    // odenis tarixcesi
     [HttpGet("my")]
     public async Task<IActionResult> GetMyPayments([FromQuery] PaginationParams pagination)
     {
@@ -45,7 +45,7 @@ public class UtilityController : ControllerBase
         return Ok(await _utilityService.GetMyPaymentsAsync(userId, pagination));
     }
 
-    // PDF qəbz
+    // PDF qebz
     [HttpGet("{id}/receipt/pdf")]
     public async Task<IActionResult> GetReceiptPdf(Guid id)
     {

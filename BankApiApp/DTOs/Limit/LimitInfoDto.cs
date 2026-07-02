@@ -1,4 +1,4 @@
-﻿namespace BankApiApp.DTOs.Limits;
+namespace BankApiApp.DTOs.Limits;
 
 public class LimitInfoDto
 {
@@ -14,5 +14,5 @@ public class LimitInfoDto
     public decimal YearlyUsed { get; set; }
     public decimal YearlyRemaining { get; set; }
 
-    public bool IsCustom { get; set; }   // hesaba özəl limit qoyulub, yoxsa standart?
+    public bool IsCustom { get; set; }   // hesaba ozel limit qoyulub, yoxsa standart?
 }

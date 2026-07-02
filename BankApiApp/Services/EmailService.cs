@@ -1,4 +1,4 @@
-﻿using BankApiApp.Models.Common;
+using BankApiApp.Models.Common;
 using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Mail;
@@ -19,21 +19,21 @@ public class EmailService : IEmailService
         // SMTP client qur (Gmail: smtp.gmail.com:587, TLS)
         using var client = new SmtpClient(_settings.SmtpHost, _settings.SmtpPort)
         {
-            EnableSsl = true,   // TLS şifrələmə
+            EnableSsl = true,   // TLS sifreleme
             Credentials = new NetworkCredential(_settings.SenderEmail, _settings.Password)
         };
 
-        // mesajı qur
+        // mesaji qur
         using var message = new MailMessage
         {
             From = new MailAddress(_settings.SenderEmail, _settings.SenderName),
             Subject = subject,
             Body = htmlBody,
-            IsBodyHtml = true   // HTML məzmun (gözəl email üçün)
+            IsBodyHtml = true   // HTML mezmun (gozel email ucun)
         };
         message.To.Add(toEmail);
 
-        // göndər
+        // gonder
         await client.SendMailAsync(message);
     }
 }

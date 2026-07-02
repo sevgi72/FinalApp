@@ -1,4 +1,4 @@
-﻿using BankApiApp.Data;
+using BankApiApp.Data;
 using BankApiApp.Data.Interceptors;
 using BankApiApp.Models;
 using BankApiApp.Models.Common;
@@ -18,7 +18,7 @@ namespace BankApiApp.Extensions;
 
 public static class ServiceRegistration
 {
-    // Program.cs-dən çağırılan əsas metod — hər şeyi qruplaşdırır
+    // Program.cs-den cagirilan esas metod — her seyi qruplasdirir
     public static IServiceCollection AddApplicationServices(
         this IServiceCollection services, IConfiguration configuration)
     {
@@ -34,7 +34,7 @@ public static class ServiceRegistration
         return services;
     }
 
-    // Verilənlər bazası
+    // Verilenler bazasi
     private static IServiceCollection AddPersistence(
     this IServiceCollection services, IConfiguration configuration)
     {
@@ -64,13 +64,16 @@ public static class ServiceRegistration
 
     // JWT autentifikasiya
     private static IServiceCollection AddJwtAuthentication(
-        this IServiceCollection services, IConfiguration configuration)
+    this IServiceCollection services, IConfiguration configuration)
     {
+        var jwtKey = configuration["Jwt:Key"]!;
+        var jwtIssuer = configuration["Jwt:Issuer"];
+        var jwtAudience = configuration["Jwt:Audience"];
+
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
         })
         .AddJwtBearer(options =>
         {
@@ -80,32 +83,47 @@ public static class ServiceRegistration
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = configuration["Jwt:Issuer"],
-                ValidAudience = configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
-                ClockSkew = TimeSpan.Zero
+                ValidIssuer = jwtIssuer,
+                ValidAudience = jwtAudience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                ClockSkew = TimeSpan.Zero   // token vaxtı bitəndə dərhal etibarsız olsun
             };
 
-            // ← yeni: hər sorğuda SecurityStamp yoxlanışı
             options.Events = new JwtBearerEvents
             {
+                // SignalR üçün: WebSocket header dəstəkləmir, ona görə token-i URL-dən oxu
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+
+                    // yalnız çat bağlantısında token-i query string-dən götür
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chatHub"))
+                        context.Token = accessToken;
+
+                    return Task.CompletedTask;
+                },
+
+                // parol dəyişəndə köhnə tokenlər dərhal etibarsız olsun (SecurityStamp yoxlaması)
                 OnTokenValidated = async context =>
                 {
                     var userManager = context.HttpContext.RequestServices
                         .GetRequiredService<UserManager<ApplicationUser>>();
 
-                    var userId = context.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    var tokenStamp = context.Principal?.FindFirst("SecurityStamp")?.Value;
+                    var user = await userManager.GetUserAsync(context.Principal!);
+                    if (user == null)
+                    {
+                        context.Fail("İstifadəçi tapılmadı.");
+                        return;
+                    }
 
-                    var user = userId == null ? null : await userManager.FindByIdAsync(userId);
-
-                    // user yoxdursa, ya da stamp uyğun gəlmirsə (parol dəyişib) → token rədd
-                    if (user == null || user.SecurityStamp != tokenStamp)
+                    var tokenStamp = context.Principal!.FindFirst("SecurityStamp")?.Value;
+                    if (tokenStamp != user.SecurityStamp)
                         context.Fail("Token etibarsızdır.");
                 }
             };
         });
+
         return services;
     }
 
@@ -120,7 +138,7 @@ public static class ServiceRegistration
         return services;
     }
 
-    // AutoMapper + öz servislərimiz
+    // AutoMapper + oz servislerimiz
     private static IServiceCollection AddAppDependencies(this IServiceCollection services)
     {
         services.AddAutoMapper(cfg => { }, typeof(Program));
@@ -140,7 +158,7 @@ public static class ServiceRegistration
         return services;
     }
 
-    // Swagger + JWT düyməsi
+    // Swagger + JWT duymesi
     private static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
@@ -155,7 +173,7 @@ public static class ServiceRegistration
                 Scheme = "Bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "Token-i bura yapışdır (Bearer yazma, sadəcə token)"
+                Description = "Token-i bura yapisdir (Bearer yazma, sadece token)"
             });
 
             options.AddSecurityRequirement(new OpenApiSecurityRequirement

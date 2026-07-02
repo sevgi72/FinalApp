@@ -1,4 +1,4 @@
-﻿using BankApiApp.DTOs.Admin;
+using BankApiApp.DTOs.Admin;
 using BankApiApp.Exceptions;
 using BankApiApp.Models;
 using Microsoft.AspNetCore.Identity;
@@ -41,13 +41,13 @@ public class AdminService : IAdminService
     public async Task AssignRoleAsync(string userId, string role)
     {
         var user = await _userManager.FindByIdAsync(userId)
-            ?? throw new NotFoundException("İstifadəçi tapılmadı.");
+            ?? throw new NotFoundException("Istifadeci tapilmadi.");
 
         if (!await _roleManager.RoleExistsAsync(role))
-            throw new NotFoundException($"'{role}' adlı rol mövcud deyil.");
+            throw new NotFoundException($"'{role}' adli rol movcud deyil.");
 
         if (await _userManager.IsInRoleAsync(user, role))
-            throw new BadRequestException("İstifadəçi artıq bu roldadır.");
+            throw new BadRequestException("Istifadeci artiq bu roldadir.");
 
         var result = await _userManager.AddToRoleAsync(user, role);
         if (!result.Succeeded)
@@ -57,7 +57,7 @@ public class AdminService : IAdminService
     public async Task RemoveRoleAsync(string userId, string role)
     {
         var user = await _userManager.FindByIdAsync(userId)
-            ?? throw new NotFoundException("İstifadəçi tapılmadı.");
+            ?? throw new NotFoundException("Istifadeci tapilmadi.");
 
         var result = await _userManager.RemoveFromRoleAsync(user, role);
         if (!result.Succeeded)

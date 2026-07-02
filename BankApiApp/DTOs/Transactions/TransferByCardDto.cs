@@ -1,9 +1,9 @@
-﻿namespace BankApiApp.DTOs.Transactions;
+namespace BankApiApp.DTOs.Transactions;
 
 public class TransferByCardDto
 {
-    public Guid FromAccountId { get; set; }       // göndərənin hesabı
-    public string ToCardNumber { get; set; } = string.Empty;   // alıcının kart nömrəsi
+    public Guid FromAccountId { get; set; }       // gonderenin hesabi
+    public string ToCardNumber { get; set; } = string.Empty;   // alicinin kart nomresi
     public decimal Amount { get; set; }
     public string? Description { get; set; }
 }

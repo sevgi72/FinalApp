@@ -1,4 +1,4 @@
-﻿using BankApiApp.Data;
+using BankApiApp.Data;
 using BankApiApp.DTOs.Common;
 using BankApiApp.DTOs.Utility;
 using BankApiApp.Exceptions;
@@ -19,7 +19,7 @@ public class UtilityService : IUtilityService
         _limitService = limitService;
     }
 
-    // bütün aktiv provayderlər
+    // butun aktiv provayderler
     public async Task<List<UtilityProviderDto>> GetProvidersAsync()
     {
         var providers = await _context.UtilityProviders
@@ -35,12 +35,12 @@ public class UtilityService : IUtilityService
         }).ToList();
     }
 
-    // borc sorğusu (simulyasiya — abunəçi kodundan deterministik borc)
+    // borc sorgusu (simulyasiya — abuneci kodundan deterministik borc)
     public async Task<DebtResponseDto> GetDebtAsync(DebtInquiryDto dto)
     {
         var provider = await _context.UtilityProviders
             .FirstOrDefaultAsync(p => p.Id == dto.ProviderId && p.IsActive)
-            ?? throw new NotFoundException("Provayder tapılmadı.");
+            ?? throw new NotFoundException("Provayder tapilmadi.");
 
         var debt = CalculateDebt(dto.SubscriberCode);
 
@@ -52,28 +52,28 @@ public class UtilityService : IUtilityService
         };
     }
 
-    // ödəniş
+    // odenis
     public async Task<UtilityPaymentDto> PayAsync(string userId, PayUtilityDto dto)
     {
         var provider = await _context.UtilityProviders
             .FirstOrDefaultAsync(p => p.Id == dto.ProviderId && p.IsActive)
-            ?? throw new NotFoundException("Provayder tapılmadı.");
+            ?? throw new NotFoundException("Provayder tapilmadi.");
 
-        // hesab istifadəçiyə aiddir?
+        // hesab istifadeciye aiddir?
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == dto.AccountId && a.OwnerId == userId)
-            ?? throw new NotFoundException("Hesab tapılmadı.");
+            ?? throw new NotFoundException("Hesab tapilmadi.");
 
         if (account.Status != AccountStatus.Active)
             throw new BadRequestException("Hesab aktiv deyil.");
 
         if (account.Balance < dto.Amount)
-            throw new BadRequestException("Balans kifayət etmir.");
+            throw new BadRequestException("Balans kifayet etmir.");
 
-        // limit yoxlaması (kommunal ödəniş də pul çıxarır)
+        // limit yoxlamasi (kommunal odenis de pul cixarir)
         await _limitService.EnsureWithinLimitsAsync(account, dto.Amount);
 
-        // atomik: balans çıxması + ödəniş qeydi + transaction qeydi
+        // atomik: balans cixmasi + odenis qeydi + transaction qeydi
         await using var trx = await _context.Database.BeginTransactionAsync();
 
         account.Balance -= dto.Amount;
@@ -88,14 +88,14 @@ public class UtilityService : IUtilityService
         };
         _context.UtilityPayments.Add(payment);
 
-        // ümumi transaction tarixçəsinə də əlavə et (çıxan pul kimi)
+        // umumi transaction tarixcesine de elave et (cixan pul kimi)
         _context.Transactions.Add(new Transaction
         {
             Amount = dto.Amount,
             Type = TransactionType.Withdraw,
             Status = TransactionStatus.Completed,
             FromAccountId = account.Id,
-            Description = $"Kommunal ödəniş: {provider.Name} ({dto.SubscriberCode})"
+            Description = $"Kommunal odenis: {provider.Name} ({dto.SubscriberCode})"
         });
 
         await _context.SaveChangesAsync();
@@ -113,11 +113,11 @@ public class UtilityService : IUtilityService
         };
     }
 
-    // ödəniş tarixçəsi (səhifələnmiş)
+    // odenis tarixcesi (sehifelenmis)
     public async Task<PagedResult<UtilityPaymentDto>> GetMyPaymentsAsync(
         string userId, PaginationParams pagination)
     {
-        // istifadəçinin hesablarının id-ləri
+        // istifadecinin hesablarinin id-leri
         var myAccountIds = await _context.Accounts
             .Where(a => a.OwnerId == userId)
             .Select(a => a.Id)
@@ -149,7 +149,7 @@ public class UtilityService : IUtilityService
         };
     }
 
-    // PDF qəbz
+    // PDF qebz
     public async Task<(byte[] Pdf, string FileName)> GetReceiptPdfAsync(string userId, Guid paymentId)
     {
         var myAccountIds = await _context.Accounts
@@ -160,22 +160,22 @@ public class UtilityService : IUtilityService
         var payment = await _context.UtilityPayments
             .Include(p => p.Provider)
             .FirstOrDefaultAsync(p => p.Id == paymentId)
-            ?? throw new NotFoundException("Ödəniş tapılmadı.");
+            ?? throw new NotFoundException("Odenis tapilmadi.");
 
-        // sahiblik yoxlaması
+        // sahiblik yoxlamasi
         if (!myAccountIds.Contains(payment.AccountId))
-            throw new BadRequestException("Bu ödəniş sizə aid deyil.");
+            throw new BadRequestException("Bu odenis size aid deyil.");
 
         var pdf = UtilityReceiptPdfGenerator.Generate(payment);
         var fileName = $"kommunal-qebz-{payment.Id.ToString("N")[..8]}.pdf";
         return (pdf, fileName);
     }
 
-    // --- köməkçi: abunəçi kodundan deterministik borc ---
+    // --- komekci: abuneci kodundan deterministik borc ---
     private static decimal CalculateDebt(string subscriberCode)
     {
-        // eyni kod həmişə eyni borcu versin (kodun hash-inə əsaslanır)
-        // 0 ilə 200 AZN arası, 2 onluq
+        // eyni kod hemise eyni borcu versin (kodun hash-ine esaslanir)
+        // 0 ile 200 AZN arasi, 2 onluq
         int hash = Math.Abs(subscriberCode.GetHashCode());
         decimal debt = (hash % 20000) / 100m;   // 0.00 - 199.99
         return debt;

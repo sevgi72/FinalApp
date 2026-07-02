@@ -1,4 +1,4 @@
-﻿using BankApiApp.DTOs.Admin;
+using BankApiApp.DTOs.Admin;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +7,7 @@ namespace BankApiApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]   // bütün endpoint-lər yalnız admin üçün
+[Authorize(Roles = "Admin")]   // butun endpoint-ler yalniz admin ucun
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
@@ -25,7 +25,7 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> AssignRole(string userId, AssignRoleDto dto)
     {
         await _adminService.AssignRoleAsync(userId, dto.Role);
-        return Ok(new { message = "Rol təyin edildi." });
+        return Ok(new { message = "Rol teyin edildi." });
     }
 
     [HttpDelete("users/{userId}/roles/{role}")]

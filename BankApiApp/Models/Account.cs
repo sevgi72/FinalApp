@@ -1,10 +1,10 @@
-﻿using BankApiApp.Models.Common;
+using BankApiApp.Models.Common;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BankApiApp.Models
 {
-    public class Account : AuditableEntity   // Id, CreatedAt, UpdatedAt avtomatik gəlir
+    public class Account : AuditableEntity   // Id, CreatedAt, UpdatedAt avtomatik gelir
     {
         [Required]
         [MaxLength(34)]
@@ -25,7 +25,7 @@ namespace BankApiApp.Models
 
         public ICollection<Card> Cards { get; set; } = new List<Card>();
 
-        // Limitlər (null olarsa standart limit tətbiq olunur)
+        // Limitler (null olarsa standart limit tetbiq olunur)
         [Column(TypeName = "decimal(18,2)")]
         public decimal? DailyLimit { get; set; }
 
@@ -35,7 +35,7 @@ namespace BankApiApp.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal? YearlyLimit { get; set; }
 
-        // PostgreSQL concurrency token — xmin sistem sütununa bağlanır
+        // PostgreSQL concurrency token — xmin sistem sutununa baglanir
         [Timestamp]
         public uint Version { get; set; }
     }
