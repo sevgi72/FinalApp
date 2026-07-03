@@ -66,10 +66,6 @@ public static class ServiceRegistration
     private static IServiceCollection AddJwtAuthentication(
     this IServiceCollection services, IConfiguration configuration)
     {
-        var jwtKey = configuration["Jwt:Key"]!;
-        var jwtIssuer = configuration["Jwt:Issuer"];
-        var jwtAudience = configuration["Jwt:Audience"];
-
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -83,10 +79,11 @@ public static class ServiceRegistration
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = jwtIssuer,
-                ValidAudience = jwtAudience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-                ClockSkew = TimeSpan.Zero   // token vaxtı bitəndə dərhal etibarsız olsun
+                ValidIssuer = configuration["Jwt:Issuer"],
+                ValidAudience = configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!)),
+                ClockSkew = TimeSpan.Zero
             };
 
             options.Events = new JwtBearerEvents
@@ -96,30 +93,46 @@ public static class ServiceRegistration
                 {
                     var accessToken = context.Request.Query["access_token"];
                     var path = context.HttpContext.Request.Path;
-
                     // yalnız çat bağlantısında token-i query string-dən götür
                     if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chatHub"))
                         context.Token = accessToken;
-
                     return Task.CompletedTask;
                 },
 
-                // parol dəyişəndə köhnə tokenlər dərhal etibarsız olsun (SecurityStamp yoxlaması)
+                // parol dəyişəndə köhnə tokenlər dərhal etibarsız olsun
                 OnTokenValidated = async context =>
                 {
                     var userManager = context.HttpContext.RequestServices
                         .GetRequiredService<UserManager<ApplicationUser>>();
 
-                    var user = await userManager.GetUserAsync(context.Principal!);
+                    // 1. İstifadəçinin ID-sini tapırıq (NameIdentifier həm qısa, həm uzun XML şemasını dəstəkləyir)
+                    var userId = context.Principal!.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                                 ?? context.Principal!.FindFirst("sub")?.Value;
+
+                    if (string.IsNullOrEmpty(userId))
+                    {
+                        context.Fail("Token daxilində istifadəçi ID-si tapılmadı.");
+                        return;
+                    }
+
+                    // 2. İstifadəçini verilənlər bazasından birbaşa ID ilə çəkirik
+                    var user = await userManager.FindByIdAsync(userId);
                     if (user == null)
                     {
                         context.Fail("İstifadəçi tapılmadı.");
                         return;
                     }
 
-                    var tokenStamp = context.Principal!.FindFirst("SecurityStamp")?.Value;
-                    if (tokenStamp != user.SecurityStamp)
-                        context.Fail("Token etibarsızdır.");
+                    // 3. Token-dəki SecurityStamp-i həm qısa adla, həm də standard .NET şeması ilə axtarırıq
+                    var tokenStamp = context.Principal!.FindFirst("SecurityStamp")?.Value
+                                  ?? context.Principal!.FindFirst(ClaimTypes.SerialNumber)?.Value;
+
+                    // Əgər token daxilində ştemp ümumiyyətlə yoxdursa və ya bazadakı ilə uyuşmursa
+                    if (string.IsNullOrEmpty(tokenStamp) || tokenStamp != user.SecurityStamp)
+                    {
+                        context.Fail("Token etibarsızdır (Təhlükəsizlik ştampı uyuşmur).");
+                        return;
+                    }
                 }
             };
         });
@@ -155,6 +168,7 @@ public static class ServiceRegistration
         services.AddScoped<ILimitService, LimitService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IUtilityService, UtilityService>();
+        services.AddScoped<IChatService, ChatService>();
         return services;
     }
 
