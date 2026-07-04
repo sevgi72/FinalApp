@@ -170,6 +170,7 @@ public static class ServiceRegistration
         services.AddScoped<IUtilityService, UtilityService>();
         services.AddScoped<IChatService, ChatService>();
         services.AddScoped<ILocalizationService, LocalizationService>();
+        services.AddScoped<ICleanupService, CleanupService>();
         return services;
     }
 

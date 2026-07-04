@@ -63,6 +63,11 @@ RecurringJob.AddOrUpdate<ILoanService>(
     "process-loan-payments",
     service => service.ProcessDuePaymentsAsync(),
     Cron.Daily);
+// Tekrarlanan is: tesdiqlenmemis kohne hesablari temizle
+RecurringJob.AddOrUpdate<ICleanupService>(
+    "cleanup-unconfirmed-accounts",
+    service => service.CleanupUnconfirmedAccountsAsync(),
+    Cron.Daily);
 
 // 3. Ən sonda Hub-lar və Controller-lər xəritələnməlidir
 app.MapHub<BankApiApp.Hubs.ChatHub>("/chatHub");
