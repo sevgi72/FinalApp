@@ -1,0 +1,5 @@
+﻿{
+	"InsufficientBalance": "Недостаточно средств.",
+	"AccountNotFound": "Счёт не найден.",
+	"InvalidCredentials": "Неверный email или пароль."
+}

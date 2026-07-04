@@ -1,0 +1,5 @@
+﻿{
+	"InsufficientBalance": "Insufficient balance.",
+	"AccountNotFound": "Account not found.",
+	"InvalidCredentials": "Invalid email or password."
+}

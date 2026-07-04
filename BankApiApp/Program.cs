@@ -21,7 +21,17 @@ builder.Services.AddCors(options =>
 // Butun servis qeydiyyatlari bir setirde
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddSignalR();
+// lokalizasiya — .resx fayllarını Resources qovluğundan oxu
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 
+// dəstəklənən dillər + default
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var cultures = new[] { "az", "en", "ru" };
+    options.SetDefaultCulture("az");
+    options.AddSupportedCultures(cultures);
+    options.AddSupportedUICultures(cultures);
+});
 var app = builder.Build();
 app.UseMiddleware<ExceptionMiddleware>();
 // Rollari ve admin istifadecisini seed et
@@ -39,6 +49,9 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseCors("AllowAll");
+// istifadəçinin Accept-Language header-inə görə dili təyin et
+var locOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<RequestLocalizationOptions>>();
+app.UseRequestLocalization(locOptions.Value);
 app.UseAuthentication(); // Tokeni oxuyur və istifadəçini tanıyır
 app.UseAuthorization();  // İstifadəçinin rolunu yoxlayır
 

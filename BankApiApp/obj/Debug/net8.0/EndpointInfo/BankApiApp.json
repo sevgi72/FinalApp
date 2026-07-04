@@ -1059,6 +1059,18 @@
         }
       }
     },
+    "/api/TestLocalization/balance-message": {
+      "get": {
+        "tags": [
+          "TestLocalization"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Transaction/deposit": {
       "post": {
         "tags": [

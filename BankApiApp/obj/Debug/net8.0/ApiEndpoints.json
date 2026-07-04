@@ -643,6 +643,16 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "BankApiApp.Controllers.TestLocalizationController",
+    "Method": "GetBalanceMessage",
+    "RelativePath": "api/TestLocalization/balance-message",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BankApiApp.Controllers.TransactionController",
     "Method": "GetReceipt",
     "RelativePath": "api/Transaction/{id}/receipt",
