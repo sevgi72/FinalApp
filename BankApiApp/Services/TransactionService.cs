@@ -13,19 +13,49 @@ public class TransactionService : ITransactionService
 {
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
-    private readonly ILimitService _limitService;   // ← yeni
-
-    public TransactionService(AppDbContext context, IMapper mapper, ILimitService limitService)
+    private readonly ILimitService _limitService;
+    private readonly IRoundUpService _roundUpService;
+    private readonly ILocalizationService _localizer;
+    public TransactionService(AppDbContext context, IMapper mapper, ILimitService limitService, IRoundUpService roundUpService, ILocalizationService localizer)
     {
         _context = context;
         _mapper = mapper;
-        _limitService = limitService;   // ← yeni
+        _limitService = limitService;
+        _roundUpService = roundUpService;
+        _localizer = localizer;
     }
+    public async Task<PagedResult<TransactionDto>> GetAccountTransactionsAsync(
+    string userId, Guid accountId, PaginationParams pagination)
+    {
+        // hesab istifadeciye aiddir? (tehlukesizlik)
+        var account = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId);
 
+        if (account == null)
+            throw new NotFoundException(_localizer.Get("AccountNotFound"));
+
+        // sorgunu qur (hele icra olunmur)
+        var query = _context.Transactions
+            .Where(t => t.FromAccountId == accountId || t.ToAccountId == accountId)
+            .OrderByDescending(t => t.CreatedAt);   // en yeni yuxarida
+
+        // entity seviyyesinde sehifele (Skip/Take bazada isleyir)
+        var paged = await query.ToPagedResultAsync(pagination);
+
+        // bu sehifenin element-lerini DTO-ya map et
+        return new PagedResult<TransactionDto>
+        {
+            Items = _mapper.Map<List<TransactionDto>>(paged.Items),
+            Page = paged.Page,
+            PageSize = paged.PageSize,
+            TotalCount = paged.TotalCount,
+            TotalPages = paged.TotalPages
+        };
+    }
     public async Task<TransactionDto> DepositAsync(string userId, DepositDto dto)
     {
         if (dto.Amount <= 0)
-            throw new BadRequestException("Mebleg 0-dan boyuk olmalidir.");
+            throw new BadRequestException(_localizer.Get("AmountMustBePositive"));
 
         var account = await GetOwnedAccountAsync(userId, dto.AccountId);
         account.Balance += dto.Amount;
@@ -48,12 +78,12 @@ public class TransactionService : ITransactionService
     public async Task<TransactionDto> WithdrawAsync(string userId, WithdrawDto dto)
     {
         if (dto.Amount <= 0)
-            throw new BadRequestException("Mebleg 0-dan boyuk olmalidir.");
+            throw new BadRequestException(_localizer.Get("AmountMustBePositive"));
 
         var account = await GetOwnedAccountAsync(userId, dto.AccountId);
 
         if (account.Balance < dto.Amount)
-            throw new BadRequestException("Balans kifayet etmir.");
+            throw new BadRequestException(_localizer.Get("InsufficientBalance"));
 
         // limit yoxlamasi (gunluk/ayliq/illik)
         await _limitService.EnsureWithinLimitsAsync(account, dto.Amount);
@@ -72,13 +102,16 @@ public class TransactionService : ITransactionService
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync();
 
+        // [Round-up Qoşulması]: Əsas əməliyyat tamamlandıqdan sonra yığım cəhdi
+        await _roundUpService.TryProcessAsync(account, dto.Amount);
+
         return _mapper.Map<TransactionDto>(transaction);
     }
 
     public async Task<TransactionDto> TransferAsync(string userId, TransferDto dto)
     {
         if (dto.Amount <= 0)
-            throw new BadRequestException("Mebleg 0-dan boyuk olmalidir.");
+            throw new BadRequestException(_localizer.Get("AmountMustBePositive"));
 
         var fromAccount = await GetOwnedAccountAsync(userId, dto.FromAccountId);
 
@@ -86,11 +119,11 @@ public class TransactionService : ITransactionService
             .FirstOrDefaultAsync(a => a.AccountNumber == dto.ToAccountNumber);
 
         if (toAccount == null)
-            throw new NotFoundException("Alan hesab tapilmadi.");
+            throw new NotFoundException(_localizer.Get("ReceiverAccountNotFound"));
         if (fromAccount.Id == toAccount.Id)
-            throw new BadRequestException("Eyni hesaba kocurme olmaz.");
+            throw new BadRequestException(_localizer.Get("SameAccountTransfer"));
         if (fromAccount.Balance < dto.Amount)
-            throw new BadRequestException("Balans kifayet etmir.");
+            throw new BadRequestException(_localizer.Get("InsufficientBalance"));
 
         // limit yoxlamasi (gunluk/ayliq/illik)
         await _limitService.EnsureWithinLimitsAsync(fromAccount, dto.Amount);
@@ -116,6 +149,10 @@ public class TransactionService : ITransactionService
             await _context.SaveChangesAsync();
 
             await dbTransaction.CommitAsync();
+
+            // [Round-up Qoşulması]: Tranzaksiya Commit olunduqdan sonra yığım cəhdi
+            await _roundUpService.TryProcessAsync(fromAccount, dto.Amount);
+
             return _mapper.Map<TransactionDto>(transaction);
         }
         catch
@@ -125,113 +162,73 @@ public class TransactionService : ITransactionService
         }
     }
 
-    // ortaq komekci: hesab istifadeciye aiddir ve aktivdir?
-    private async Task<Account> GetOwnedAccountAsync(string userId, Guid accountId)
-    {
-        var account = await _context.Accounts
-            .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId);
-
-        if (account == null)
-            throw new NotFoundException("Hesab tapilmadi.");
-        if (account.Status != AccountStatus.Active)
-            throw new BadRequestException("Hesab aktiv deyil.");
-
-        return account;
-    }
-
-    public async Task<PagedResult<TransactionDto>> GetAccountTransactionsAsync(
-        string userId, Guid accountId, PaginationParams pagination)
-    {
-        // hesab istifadeciye aiddir? (tehlukesizlik)
-        var account = await _context.Accounts
-            .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId);
-
-        if (account == null)
-            throw new NotFoundException("Hesab tapilmadi.");
-
-        // sorgunu qur (hele icra olunmur)
-        var query = _context.Transactions
-            .Where(t => t.FromAccountId == accountId || t.ToAccountId == accountId)
-            .OrderByDescending(t => t.CreatedAt);   // en yeni yuxarida
-
-        // entity seviyyesinde sehifele (Skip/Take bazada isleyir)
-        var paged = await query.ToPagedResultAsync(pagination);
-
-        // bu sehifenin element-lerini DTO-ya map et ve yeni netice qur
-        return new PagedResult<TransactionDto>
-        {
-            Items = _mapper.Map<List<TransactionDto>>(paged.Items),
-            Page = paged.Page,
-            PageSize = paged.PageSize,
-            TotalCount = paged.TotalCount,
-            TotalPages = paged.TotalPages
-        };
-    }
-
     public async Task TransferByCardAsync(string userId, TransferByCardDto dto)
     {
         if (dto.Amount <= 0)
-            throw new BadRequestException("Mebleg sifirdan boyuk olmalidir.");
+            throw new BadRequestException(_localizer.Get("AmountMustBePositive"));
 
-        // 1. Gonderenin hesabi + sahiblik
         var fromAccount = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == dto.FromAccountId)
-            ?? throw new NotFoundException("Gonderen hesab tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
 
         if (fromAccount.OwnerId != userId)
-            throw new BadRequestException("Bu hesab size aid deyil.");
+            throw new BadRequestException(_localizer.Get("AccountNotYours"));
 
-        // 2. Kart nomresinden alicinin kartini + bagli hesabini tap
         var cardNumber = (dto.ToCardNumber ?? string.Empty).Replace(" ", "");
 
         var toCard = await _context.Cards
             .Include(c => c.Account)
             .FirstOrDefaultAsync(c => c.CardNumber == cardNumber)
-            ?? throw new NotFoundException("Bu nomre ile kart tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("CardNotFound"));
 
         if (toCard.Status == CardStatus.Blocked)
-            throw new BadRequestException("Alicinin karti bloklanib.");
+            throw new BadRequestException(_localizer.Get("ReceiverCardBlocked"));
 
         var toAccount = toCard.Account;
 
-        // 3. Ozune kocurme qadagasi
         if (toAccount.Id == fromAccount.Id)
-            throw new BadRequestException("Eyni hesaba kocurme edile bilmez.");
+            throw new BadRequestException(_localizer.Get("SameAccountTransfer"));
 
-        // 4. Balans yoxlamasi
         if (fromAccount.Balance < dto.Amount)
-            throw new BadRequestException("Balans kifayet deyil.");
+            throw new BadRequestException(_localizer.Get("InsufficientBalance"));
 
-        // 5. limit yoxlamasi (gunluk/ayliq/illik)
         await _limitService.EnsureWithinLimitsAsync(fromAccount, dto.Amount);
 
-        // 6. Atomik kocurme
         await using var trx = await _context.Database.BeginTransactionAsync();
-
-        fromAccount.Balance -= dto.Amount;
-        toAccount.Balance += dto.Amount;
-
-        _context.Transactions.Add(new Transaction
+        try
         {
-            Amount = dto.Amount,
-            Type = TransactionType.Transfer,
-            Status = TransactionStatus.Completed,
-            Description = dto.Description ?? $"Karta kocurme (**** {cardNumber[^4..]})",
-            FromAccountId = fromAccount.Id,
-            ToAccountId = toAccount.Id
-        });
+            fromAccount.Balance -= dto.Amount;
+            toAccount.Balance += dto.Amount;
 
-        await _context.SaveChangesAsync();
-        await trx.CommitAsync();
+            _context.Transactions.Add(new Transaction
+            {
+                Amount = dto.Amount,
+                Type = TransactionType.Transfer,
+                Status = TransactionStatus.Completed,
+                Description = dto.Description ?? _localizer.Get("DefaultTransferDescription").Replace("{cardNumber}", $"**** {cardNumber[^4..]}"),
+                FromAccountId = fromAccount.Id,
+                ToAccountId = toAccount.Id
+            });
+
+            await _context.SaveChangesAsync();
+            await trx.CommitAsync();
+
+            // [Round-up Qoşulması]: Tranzaksiya Commit olunduqdan sonra yığım cəhdi
+            await _roundUpService.TryProcessAsync(fromAccount, dto.Amount);
+        }
+        catch
+        {
+            await trx.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<ReceiptDto> GetReceiptAsync(string userId, Guid transactionId)
     {
         var trx = await _context.Transactions
             .FirstOrDefaultAsync(t => t.Id == transactionId)
-            ?? throw new NotFoundException("Emeliyyat tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("TransactionNotFound"));
 
-        // sahiblik: istifadeci from ve ya to hesabin sahibi olmalidir
         var myAccountIds = await _context.Accounts
             .Where(a => a.OwnerId == userId)
             .Select(a => a.Id)
@@ -240,9 +237,8 @@ public class TransactionService : ITransactionService
         bool ownsFrom = trx.FromAccountId.HasValue && myAccountIds.Contains(trx.FromAccountId.Value);
         bool ownsTo = trx.ToAccountId.HasValue && myAccountIds.Contains(trx.ToAccountId.Value);
         if (!ownsFrom && !ownsTo)
-            throw new BadRequestException("Bu emeliyyat size aid deyil.");
+            throw new BadRequestException(_localizer.Get("TransactionNotYours"));
 
-        // gostermek ucun hesab nomrelerini tap
         string? fromNumber = null, toNumber = null;
         if (trx.FromAccountId.HasValue)
             fromNumber = await _context.Accounts
@@ -274,20 +270,17 @@ public class TransactionService : ITransactionService
         return (pdf, fileName);
     }
 
-    // hesab nomresini maskala (son 4 reqem)
     private static string? MaskAccount(string? accountNumber)
     {
         if (string.IsNullOrEmpty(accountNumber)) return null;
         return accountNumber.Length <= 4 ? accountNumber : "**** " + accountNumber[^4..];
     }
 
-    public async Task<(byte[] Content, string FileName)> ExportTransactionsCsvAsync(
-        string userId, Guid accountId)
+    public async Task<(byte[] Content, string FileName)> ExportTransactionsCsvAsync(string userId, Guid accountId)
     {
-        // hesab istifadeciye aiddir? (tehlukesizlik)
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId)
-            ?? throw new NotFoundException("Hesab tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
 
         var transactions = await _context.Transactions
             .Where(t => t.FromAccountId == accountId || t.ToAccountId == accountId)
@@ -295,21 +288,33 @@ public class TransactionService : ITransactionService
             .ToListAsync();
 
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine("Tarix,Nov,Mebleg,Status,Tesvir");   // basliq setri
+        sb.AppendLine("Tarix,Nov,Mebleg,Status,Tesvir");
 
         foreach (var t in transactions)
         {
             var date = t.CreatedAt.ToString("dd.MM.yyyy HH:mm");
-            var description = (t.Description ?? "").Replace("\"", "\"\"");   // dirnaqlari qoru
+            var description = (t.Description ?? "").Replace("\"", "\"\"");
             sb.AppendLine($"{date},{t.Type},{t.Amount},{t.Status},\"{description}\"");
         }
 
-        // UTF-8 BOM elave et ki, Excel Azerbaycan herflerini duzgun gostersin
         var preamble = System.Text.Encoding.UTF8.GetPreamble();
         var body = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
         var content = preamble.Concat(body).ToArray();
 
         var fileName = $"emeliyyatlar-{account.AccountNumber}.csv";
         return (content, fileName);
+    }
+
+    private async Task<Account> GetOwnedAccountAsync(string userId, Guid accountId)
+    {
+        var account = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId);
+
+        if (account == null)
+            throw new NotFoundException(_localizer.Get("AccountNotFound"));
+        if (account.Status != AccountStatus.Active)
+            throw new BadRequestException(_localizer.Get("AccountNotActive"));
+
+        return account;
     }
 }

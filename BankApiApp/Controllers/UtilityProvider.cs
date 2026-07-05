@@ -53,4 +53,10 @@ public class UtilityController : ControllerBase
         var (pdf, fileName) = await _utilityService.GetReceiptPdfAsync(userId, id);
         return File(pdf, "application/pdf", fileName);
     }
+
+    // provayder ac/sondur (yalniz SuperAdmin)
+    [HttpPost("providers/{id}/toggle")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> ToggleProvider(Guid id, [FromQuery] bool isActive)
+        => Ok(new { message = await _utilityService.ToggleProviderAsync(id, isActive) });
 }

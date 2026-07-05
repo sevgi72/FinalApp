@@ -27,7 +27,7 @@ public class LoanController : ControllerBase
     }
 
     [HttpGet("pending")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> Pending([FromQuery] PaginationParams pagination)
     {
         return Ok(await _loanService.GetPendingLoansAsync(pagination));
@@ -35,12 +35,12 @@ public class LoanController : ControllerBase
     private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
     
     [HttpPost("{id}/approve")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> Approve(Guid id)
         => Ok(await _loanService.ApproveLoanAsync(id));
 
     [HttpPost("{id}/reject")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> Reject(Guid id)
         => Ok(await _loanService.RejectLoanAsync(id));
 

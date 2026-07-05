@@ -20,12 +20,12 @@ public class ChatHub : Hub
     // istifadecinin id ve adini token-den gotur
     private string UserId => Context.User!.FindFirstValue(ClaimTypes.NameIdentifier)!;
     private string UserName => Context.User!.FindFirstValue(ClaimTypes.Name) ?? "Istifadeci";
-    private bool IsAdmin => Context.User!.IsInRole("Admin");
+    private bool IsAdmin => Context.User!.IsInRole("Admin") || Context.User!.IsInRole("SuperAdmin");
 
     // qosulanda: adminleri "admins" qrupuna elave et
     public override async Task OnConnectedAsync()
     {
-        if (IsAdmin)
+        if (Context.User!.IsInRole("Admin") || Context.User!.IsInRole("SuperAdmin"))
             await Groups.AddToGroupAsync(Context.ConnectionId, "admins");
 
         await base.OnConnectedAsync();

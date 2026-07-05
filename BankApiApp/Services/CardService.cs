@@ -10,10 +10,12 @@ namespace BankApiApp.Services;
 
 public class CardService : ICardService
 {
+    private readonly ILocalizationService _localizer;
     private readonly AppDbContext _context;
 
-    public CardService(AppDbContext context)
+    public CardService(AppDbContext context, ILocalizationService localizer)
     {
+        _localizer = localizer;
         _context = context;
     }
 
@@ -23,10 +25,10 @@ public class CardService : ICardService
         var account = await _context.Accounts
             .Include(a => a.Owner)
             .FirstOrDefaultAsync(a => a.Id == dto.AccountId)
-            ?? throw new NotFoundException("Hesab tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
 
         if (account.OwnerId != userId)
-            throw new BadRequestException("Bu hesab size aid deyil.");
+            throw new BadRequestException(_localizer.Get("AccountNotYours"));
 
         // unikal kart nomresi yarat (toqqusma olarsa tekrar)
         string cardNumber;
@@ -111,10 +113,10 @@ public class CardService : ICardService
         var card = await _context.Cards
             .Include(c => c.Account)
             .FirstOrDefaultAsync(c => c.Id == cardId)
-            ?? throw new NotFoundException("Kart tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("CardNotFound"));
 
         if (card.Account.OwnerId != userId)
-            throw new BadRequestException("Bu kart size aid deyil.");
+            throw new BadRequestException(_localizer.Get("CardNotYours"));
 
         return card;
     }

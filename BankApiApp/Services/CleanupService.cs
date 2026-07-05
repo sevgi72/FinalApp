@@ -12,7 +12,7 @@ public class CleanupService : ICleanupService
     private readonly ILogger<CleanupService> _logger;
 
     // təsdiqlənməmiş hesab neçə saatdan sonra silinsin
-    private const int ExpiryHours = 0;
+    private const int ExpiryHours = 24;
 
     public CleanupService(
         UserManager<ApplicationUser> userManager,

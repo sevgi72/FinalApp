@@ -16,6 +16,7 @@ namespace BankApiApp.Services;
 
 public class AuthService : IAuthService
 {
+    private readonly ILocalizationService _localizer;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _config;
     private readonly AppDbContext _context;
@@ -40,7 +41,7 @@ public class AuthService : IAuthService
     {
         var existing = await _userManager.FindByEmailAsync(dto.Email);
         if (existing != null)
-            throw new BadRequestException("Bu email artiq qeydiyyatdan kecib.");
+            throw new BadRequestException(_localizer.Get("EmailAlreadyRegistered"));
 
         var user = new ApplicationUser
         {
@@ -73,16 +74,16 @@ public class AuthService : IAuthService
     public async Task<string> ConfirmEmailAsync(ConfirmEmailDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email)
-            ?? throw new NotFoundException("Istifadeci tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("UserNotFound"));
 
         if (user.EmailConfirmed)
             return "Email artiq tesdiqlenib.";
 
         if (user.EmailConfirmationCode != dto.Code)
-            throw new BadRequestException("Tesdiq kodu yanlisdir.");
+            throw new BadRequestException(_localizer.Get("InvalidVerificationCode"));
 
         if (user.EmailConfirmationCodeExpiry < DateTime.UtcNow)
-            throw new BadRequestException("Tesdiq kodunun vaxti bitib. Yeniden kod teleb edin.");
+            throw new BadRequestException(_localizer.Get("VerificationCodeExpired"));
 
         user.EmailConfirmed = true;
         user.EmailConfirmationCode = null;
@@ -120,20 +121,26 @@ public class AuthService : IAuthService
         if (user == null)
         {
             await _auditService.LogManualAsync("LoginFailed", $"Movcud olmayan email: {dto.Email}");
-            throw new BadRequestException("Email ve ya parol yanlisdir.");
+            throw new BadRequestException(_localizer.Get("InvalidEmailOrPassword"));
         }
 
         var valid = await _userManager.CheckPasswordAsync(user, dto.Password);
+        // bloklanmis istifadeci daxil ola bilmez
+        if (await _userManager.IsLockedOutAsync(user))
+        {
+            await _auditService.LogManualAsync("LoginBlocked", "Bloklanmis hesab.", user.Id, user.Email);
+            throw new BadRequestException(_localizer.Get("HesabnzbloklanbDstkllaqsaxlayn"));
+        }
         if (!valid)
         {
             await _auditService.LogManualAsync("LoginFailed", "Yanlis parol.", user.Id, user.Email);
-            throw new BadRequestException("Email ve ya parol yanlisdir.");
+            throw new BadRequestException(_localizer.Get("InvalidEmailOrPassword"));
         }
 
         if (!user.EmailConfirmed)
         {
             await _auditService.LogManualAsync("LoginBlocked", "Tesdiqlenmemis email.", user.Id, user.Email);
-            throw new BadRequestException("Email tesdiqlenmeyib. Zehmet olmasa evvelce emailinizi tesdiqleyin.");
+            throw new BadRequestException(_localizer.Get("EmailNotVerified"));
         }
 
         if (user.IsTwoFactorEnabled)
@@ -164,12 +171,12 @@ public class AuthService : IAuthService
     public async Task<AuthResponseDto> VerifyTwoFactorAsync(VerifyTwoFactorDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email)
-            ?? throw new BadRequestException("Kod yanlisdir ve ya vaxti bitib.");
+            ?? throw new BadRequestException(_localizer.Get("InvalidOrExpiredCode"));
 
         if (user.TwoFactorCode != dto.Code || user.TwoFactorCodeExpiry < DateTime.UtcNow)
         {
             await _auditService.LogManualAsync("TwoFactorFailed", "Yanlis OTP.", user.Id, user.Email);
-            throw new BadRequestException("Kod yanlisdir ve ya vaxti bitib.");
+            throw new BadRequestException(_localizer.Get("InvalidOrExpiredCode"));
         }
 
         user.TwoFactorCode = null;
@@ -184,7 +191,7 @@ public class AuthService : IAuthService
     public async Task<string> ToggleTwoFactorAsync(string userId, ToggleTwoFactorDto dto)
     {
         var user = await _userManager.FindByIdAsync(userId)
-            ?? throw new NotFoundException("Istifadeci tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("UserNotFound"));
 
         user.IsTwoFactorEnabled = dto.Enable;
         await _userManager.UpdateAsync(user);
@@ -215,7 +222,7 @@ public class AuthService : IAuthService
         }
         catch
         {
-            throw new BadRequestException("Google token etibarsizdir.");
+            throw new BadRequestException(_localizer.Get("InvalidGoogleToken"));
         }
 
         // 2. Token-den melumatlari cixar
@@ -269,7 +276,7 @@ public class AuthService : IAuthService
             .FirstOrDefaultAsync(rt => rt.Token == dto.RefreshToken);
 
         if (stored == null || stored.IsRevoked || stored.ExpiresAt < DateTime.UtcNow)
-            throw new BadRequestException("Refresh token etibarsizdir ve ya vaxti bitib.");
+            throw new BadRequestException(_localizer.Get("InvalidOrExpiredRefreshToken"));
 
         stored.IsRevoked = true;
         await _context.SaveChangesAsync();
@@ -281,7 +288,7 @@ public class AuthService : IAuthService
     {
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
-            throw new NotFoundException("Istifadeci tapilmadi.");
+            throw new NotFoundException(_localizer.Get("UserNotFound"));
 
         var result = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
         if (!result.Succeeded)
@@ -322,10 +329,10 @@ public class AuthService : IAuthService
     public async Task<string> ResetPasswordAsync(ResetPasswordDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email)
-            ?? throw new BadRequestException("Kod yanlisdir ve ya vaxti bitib.");
+            ?? throw new BadRequestException(_localizer.Get("InvalidOrExpiredCode"));
 
         if (user.PasswordResetCode != dto.Code || user.PasswordResetCodeExpiry < DateTime.UtcNow)
-            throw new BadRequestException("Kod yanlisdir ve ya vaxti bitib.");
+            throw new BadRequestException(_localizer.Get("InvalidOrExpiredCode"));
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
@@ -363,7 +370,7 @@ public class AuthService : IAuthService
     public async Task<ProfileDto> GetProfileAsync(string userId)
     {
         var user = await _userManager.FindByIdAsync(userId)
-            ?? throw new NotFoundException("Istifadeci tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("UserNotFound"));
 
         var roles = await _userManager.GetRolesAsync(user);
 

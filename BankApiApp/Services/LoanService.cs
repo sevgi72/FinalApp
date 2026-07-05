@@ -11,12 +11,14 @@ namespace BankApiApp.Services;
 
 public class LoanService : ILoanService
 {
+    private readonly ILocalizationService _localizer;
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
     private const decimal AnnualInterestRate = 12m;  // bankin illik faizi (%)
 
-    public LoanService(AppDbContext context, IMapper mapper)
+    public LoanService(AppDbContext context, IMapper mapper, ILocalizationService localizer)
     {
+        _localizer = localizer;
         _context = context;
         _mapper = mapper;
     }
@@ -24,14 +26,14 @@ public class LoanService : ILoanService
     public async Task<LoanDto> RequestLoanAsync(string userId, LoanRequestDto dto)
     {
         if (dto.Principal <= 0)
-            throw new BadRequestException("Kredit meblegi 0-dan boyuk olmalidir.");
+            throw new BadRequestException(_localizer.Get("AmountMustBePositive"));
         if (dto.TermMonths <= 0)
-            throw new BadRequestException("Muddet 0-dan boyuk olmalidir.");
+            throw new BadRequestException(_localizer.Get("DurationMustBePositive"));
 
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == dto.AccountId && a.OwnerId == userId);
         if (account == null)
-            throw new NotFoundException("Hesab tapilmadi.");
+            throw new NotFoundException(_localizer.Get("AccountNotFound"));
 
         // AMORTIZASIYA: ayliq odenis ve umumi meblegi hesabla
         var (monthlyPayment, totalPayable) =
@@ -114,9 +116,9 @@ public class LoanService : ILoanService
             .FirstOrDefaultAsync(l => l.Id == loanId);
 
         if (loan == null)
-            throw new NotFoundException("Kredit tapilmadi.");
+            throw new NotFoundException(_localizer.Get("LoanNotFound"));
         if (loan.Status != LoanStatus.Pending)
-            throw new BadRequestException("Yalniz gozleyen kredit tesdiqlene biler.");
+            throw new BadRequestException(_localizer.Get("OnlyPendingLoanCanBeApproved"));
 
         await using var dbTx = await _context.Database.BeginTransactionAsync();
         try
@@ -165,9 +167,9 @@ public class LoanService : ILoanService
     {
         var loan = await _context.Loans.FirstOrDefaultAsync(l => l.Id == loanId);
         if (loan == null)
-            throw new NotFoundException("Kredit tapilmadi.");
+            throw new NotFoundException(_localizer.Get("LoanNotFound"));
         if (loan.Status != LoanStatus.Pending)
-            throw new BadRequestException("Yalniz gozleyen kredit redd edile biler.");
+            throw new BadRequestException(_localizer.Get("OnlyPendingLoanCanBeRejected"));
 
         loan.Status = LoanStatus.Rejected;
         await _context.SaveChangesAsync();

@@ -53,6 +53,38 @@
   },
   {
     "ContainingType": "BankApiApp.Controllers.AdminController",
+    "Method": "GetUserDetail",
+    "RelativePath": "api/Admin/users/{userId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.AdminController",
+    "Method": "BlockUser",
+    "RelativePath": "api/Admin/users/{userId}/block",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.AdminController",
     "Method": "AssignRole",
     "RelativePath": "api/Admin/users/{userId}/roles",
     "HttpMethod": "POST",
@@ -87,6 +119,22 @@
       },
       {
         "Name": "role",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.AdminController",
+    "Method": "UnblockUser",
+    "RelativePath": "api/Admin/users/{userId}/unblock",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
         "Type": "System.String",
         "IsRequired": true
       }
@@ -643,6 +691,42 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "BankApiApp.Controllers.RoundUpController",
+    "Method": "Disable",
+    "RelativePath": "api/RoundUp/disable",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.RoundUpController",
+    "Method": "Enable",
+    "RelativePath": "api/RoundUp/enable",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.RoundUp.EnableRoundUpDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.RoundUpController",
+    "Method": "GetStatus",
+    "RelativePath": "api/RoundUp/status",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BankApiApp.Controllers.TestLocalizationController",
     "Method": "GetBalanceMessage",
     "RelativePath": "api/TestLocalization/balance-message",
@@ -851,6 +935,27 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.UtilityController",
+    "Method": "ToggleProvider",
+    "RelativePath": "api/Utility/providers/{id}/toggle",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "isActive",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      }
+    ],
     "ReturnTypes": []
   }
 ]

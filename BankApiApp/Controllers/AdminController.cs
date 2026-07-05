@@ -2,12 +2,13 @@ using BankApiApp.DTOs.Admin;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BankApiApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]   // butun endpoint-ler yalniz admin ucun
+[Authorize(Roles = "SuperAdmin")]   // butun endpoint-ler yalniz admin ucun
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
@@ -18,10 +19,12 @@ public class AdminController : ControllerBase
     }
 
     [HttpGet("users")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> GetUsers()
         => Ok(await _adminService.GetUsersAsync());
 
     [HttpPost("users/{userId}/roles")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> AssignRole(string userId, AssignRoleDto dto)
     {
         await _adminService.AssignRoleAsync(userId, dto.Role);
@@ -29,9 +32,34 @@ public class AdminController : ControllerBase
     }
 
     [HttpDelete("users/{userId}/roles/{role}")]
+    [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> RemoveRole(string userId, string role)
     {
         await _adminService.RemoveRoleAsync(userId, role);
         return Ok(new { message = "Rol silindi." });
     }
+
+    // istifadecini blokla
+    [HttpPost("users/{userId}/block")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> BlockUser(string userId)
+    {
+        var callerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(new { message = await _adminService.BlockUserAsync(callerId, userId) });
+    }
+
+    // bloku ac
+    [HttpPost("users/{userId}/unblock")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> UnblockUser(string userId)
+    {
+        var callerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(new { message = await _adminService.UnblockUserAsync(callerId, userId) });
+    }
+
+    // istifadeci detallari
+    [HttpGet("users/{userId}")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> GetUserDetail(string userId)
+        => Ok(await _adminService.GetUserDetailAsync(userId));
 }

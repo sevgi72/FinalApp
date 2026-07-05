@@ -9,11 +9,13 @@ namespace BankApiApp.Services;
 
 public class AccountService : IAccountService
 {
+    private readonly ILocalizationService _localizer;
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
 
-    public AccountService(AppDbContext context, IMapper mapper)
+    public AccountService(AppDbContext context, IMapper mapper, ILocalizationService localizer)
     {
+        _localizer = localizer;
         _context = context;
         _mapper = mapper;
     }
@@ -51,7 +53,7 @@ public class AccountService : IAccountService
             .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId);
 
         if (account == null)
-            throw new NotFoundException("Hesab tapilmadi.");
+            throw new NotFoundException(_localizer.Get("AccountNotFound"));
 
         return _mapper.Map<AccountDto>(account);
     }

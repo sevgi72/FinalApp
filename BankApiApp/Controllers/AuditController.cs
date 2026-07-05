@@ -7,7 +7,7 @@ namespace BankApiApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "SuperAdmin")]
 public class AuditController : ControllerBase
 {
     private readonly IAuditService _auditService;

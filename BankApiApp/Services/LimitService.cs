@@ -8,6 +8,7 @@ namespace BankApiApp.Services;
 
 public class LimitService : ILimitService
 {
+    private readonly ILocalizationService _localizer;
     private readonly AppDbContext _context;
 
     // standart limitler (hesaba ozel limit qoyulmayibsa bunlar tetbiq olunur)
@@ -15,8 +16,9 @@ public class LimitService : ILimitService
     public const decimal DefaultMonthlyLimit = 20000m;
     public const decimal DefaultYearlyLimit = 200000m;
 
-    public LimitService(AppDbContext context)
+    public LimitService(AppDbContext context, ILocalizationService localizer)
     {
+        _localizer = localizer;
         _context = context;
     }
 
@@ -46,7 +48,7 @@ public class LimitService : ILimitService
     {
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId)
-            ?? throw new NotFoundException("Hesab tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
 
         var (spentToday, spentMonth, spentYear) = await GetSpentAsync(account.Id);
 
@@ -73,10 +75,10 @@ public class LimitService : ILimitService
     {
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId)
-            ?? throw new NotFoundException("Hesab tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
 
         if (dto.DailyLimit < 0 || dto.MonthlyLimit < 0 || dto.YearlyLimit < 0)
-            throw new BadRequestException("Limit menfi ola bilmez.");
+            throw new BadRequestException(_localizer.Get("LimitCannotBeNegative"));
 
         account.DailyLimit = dto.DailyLimit;
         account.MonthlyLimit = dto.MonthlyLimit;

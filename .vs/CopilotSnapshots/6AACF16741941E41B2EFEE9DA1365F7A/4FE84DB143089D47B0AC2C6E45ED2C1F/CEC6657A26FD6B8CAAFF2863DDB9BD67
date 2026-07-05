@@ -1,0 +1,113 @@
+﻿using BankApiApp.Data;
+using BankApiApp.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+
+namespace BankApiApp.Hubs;
+
+[Authorize]   // yanliz login olmus istifadeciler qosula biler
+public class ChatHub : Hub
+{
+    private readonly AppDbContext _context;
+
+    public ChatHub(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    // istifadecinin id ve adini token-den gotur
+    private string UserId => Context.User!.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    private string UserName => Context.User!.FindFirstValue(ClaimTypes.Name) ?? "Istifadeci";
+    private bool IsAdmin => Context.User!.IsInRole("Admin");
+
+    // qosulanda: adminleri "admins" qrupuna elave et
+    public override async Task OnConnectedAsync()
+    {
+        if (IsAdmin)
+            await Groups.AddToGroupAsync(Context.ConnectionId, "admins");
+
+        await base.OnConnectedAsync();
+    }
+
+    // ISTIFADECI → ADMIN mesaj gonderir
+    public async Task SendToAdmin(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return;
+
+        var message = new ChatMessage
+        {
+            SenderId = UserId,
+            SenderName = UserName,
+            ReceiverId = "admin",       // adminlere umumi
+            Content = content,
+            IsFromAdmin = false,
+            IsRead = false,
+            SentAt = DateTime.UtcNow
+        };
+
+        _context.ChatMessages.Add(message);
+        await _context.SaveChangesAsync();
+
+        // butun adminlere real-time itele
+        await Clients.Group("admins").SendAsync("ReceiveMessage", new
+        {
+            id = message.Id,
+            senderId = message.SenderId,
+            senderName = message.SenderName,
+            content = message.Content,
+            isFromAdmin = false,
+            sentAt = message.SentAt
+        });
+
+        // gonderenin ozune de tesdiq (oz mesajini gorsun)
+        await Clients.Caller.SendAsync("MessageSent", new
+        {
+            id = message.Id,
+            content = message.Content,
+            sentAt = message.SentAt
+        });
+    }
+
+    // ADMIN → ISTIFADECI cavab gonderir
+    public async Task SendToUser(string userId, string content)
+    {
+        if (!IsAdmin || string.IsNullOrWhiteSpace(content))
+            return;
+
+        var message = new ChatMessage
+        {
+            SenderId = UserId,          // admin id
+            SenderName = UserName,      // admin adi
+            ReceiverId = userId,        // konkret istifadeci
+            Content = content,
+            IsFromAdmin = true,
+            IsRead = false,
+            SentAt = DateTime.UtcNow
+        };
+
+        _context.ChatMessages.Add(message);
+        await _context.SaveChangesAsync();
+
+        // konkret istifadeciye real-time itele (userId ile)
+        await Clients.User(userId).SendAsync("ReceiveMessage", new
+        {
+            id = message.Id,
+            senderId = message.SenderId,
+            senderName = message.SenderName,
+            content = message.Content,
+            isFromAdmin = true,
+            sentAt = message.SentAt
+        });
+
+        // admin ozu de gorsun
+        await Clients.Caller.SendAsync("MessageSent", new
+        {
+            id = message.Id,
+            content = message.Content,
+            sentAt = message.SentAt
+        });
+    }
+}

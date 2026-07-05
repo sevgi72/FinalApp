@@ -7,7 +7,7 @@ namespace BankApiApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
+[Authorize(Roles = "SuperAdmin,Admin")]
 public class ChatController : ControllerBase
 {
     private readonly IChatService _chatService;
@@ -27,13 +27,13 @@ public class ChatController : ControllerBase
 
     // admin bütün söhbətlərin siyahısını görür
     [HttpGet("conversations")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> GetConversations()
         => Ok(await _chatService.GetConversationsAsync());
 
     // admin konkret istifadəçi ilə söhbəti görür
     [HttpGet("conversation/{userId}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> GetConversation(string userId)
         => Ok(await _chatService.GetConversationAsync(userId));
 }

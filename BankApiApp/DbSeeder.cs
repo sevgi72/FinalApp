@@ -13,7 +13,8 @@ public static class DbSeeder
         var context = services.GetRequiredService<AppDbContext>();   // ← elave olundu
 
         // rollari yarat
-        foreach (var role in new[] { "Admin", "Customer" })
+        // rollari yarat
+        foreach (var role in new[] { "SuperAdmin", "Admin", "Customer" })
         {
             if (!await roleManager.RoleExistsAsync(role))
                 await roleManager.CreateAsync(new IdentityRole(role));
@@ -33,7 +34,20 @@ public static class DbSeeder
             await userManager.CreateAsync(admin, "Admin123!");
             await userManager.AddToRoleAsync(admin, "Admin");
         }
-
+        // superadmin istifadecisi yarat
+        var superAdminEmail = "superadmin@bank.az";
+        if (await userManager.FindByEmailAsync(superAdminEmail) == null)
+        {
+            var superAdmin = new ApplicationUser
+            {
+                FullName = "Super Admin",
+                Email = superAdminEmail,
+                UserName = superAdminEmail,
+                EmailConfirmed = true
+            };
+            await userManager.CreateAsync(superAdmin, "Super123!");
+            await userManager.AddToRoleAsync(superAdmin, "SuperAdmin");
+        }
         // Kommunal provayderleri seed et (yoxdursa)
         if (!await context.UtilityProviders.AnyAsync())
         {

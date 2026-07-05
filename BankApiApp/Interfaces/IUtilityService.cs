@@ -10,4 +10,5 @@ public interface IUtilityService
     Task<UtilityPaymentDto> PayAsync(string userId, PayUtilityDto dto);
     Task<PagedResult<UtilityPaymentDto>> GetMyPaymentsAsync(string userId, PaginationParams pagination);
     Task<(byte[] Pdf, string FileName)> GetReceiptPdfAsync(string userId, Guid paymentId);
+    Task<string> ToggleProviderAsync(Guid providerId, bool isActive);
 }

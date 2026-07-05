@@ -11,10 +11,12 @@ namespace BankApiApp.Services;
 
 public class PaymentService : IPaymentService
 {
+    private readonly ILocalizationService _localizer;
     private readonly AppDbContext _context;
 
-    public PaymentService(AppDbContext context)
+    public PaymentService(AppDbContext context, ILocalizationService localizer)
     {
+        _localizer = localizer;
         _context = context;
     }
 
@@ -23,14 +25,14 @@ public class PaymentService : IPaymentService
         // 1. Hesabi tap + sahiblik yoxla
         var account = await _context.Accounts
             .FirstOrDefaultAsync(a => a.Id == dto.AccountId)
-            ?? throw new NotFoundException("Hesab tapilmadi.");
+            ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
 
         if (account.OwnerId != userId)
-            throw new BadRequestException("Bu hesab size aid deyil.");
+            throw new BadRequestException(_localizer.Get("AccountNotYours"));
 
         // 2. Mebleg yoxlamasi
         if (dto.Amount <= 0)
-            throw new BadRequestException("Mebleg sifirdan boyuk olmalidir.");
+            throw new BadRequestException(_localizer.Get("AmountMustBePositive"));
 
         // kart nomresini temizle (bosluqlari sil)
         var cardNumber = (dto.CardNumber ?? string.Empty).Replace(" ", "");
