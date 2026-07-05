@@ -1,6 +1,8 @@
 using BankApiApp.Data; // AppDbContext üçün lazımdır
 using BankApiApp.DTOs.Admin;
+using BankApiApp.DTOs.Common;
 using BankApiApp.Exceptions;
+using BankApiApp.Extensions;
 using BankApiApp.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -24,23 +26,58 @@ public class AdminService : IAdminService
         _context = context;
     }
 
-    public async Task<List<UserDto>> GetUsersAsync()
+    // istifadeci siyahisi (axtaris + filtrle)
+    // istifadeci siyahisi (axtaris + filtrle)
+    public async Task<PagedResult<UserDto>> GetUsersAsync(
+        PaginationParams pagination, string? search, bool? blocked)
     {
-        var users = await _userManager.Users.ToListAsync();
-        var result = new List<UserDto>();
+        var query = _userManager.Users.AsQueryable();
 
-        foreach (var user in users)
+        // ad ve ya email uzre axtaris
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.ToLower();
+            query = query.Where(u =>
+                u.Email!.ToLower().Contains(s) ||
+                u.FullName.ToLower().Contains(s));
+        }
+
+        // yalniz bloklu / yalniz aciq
+        if (blocked.HasValue)
+        {
+            var now = DateTimeOffset.UtcNow;
+            query = blocked.Value
+                ? query.Where(u => u.LockoutEnd != null && u.LockoutEnd > now)
+                : query.Where(u => u.LockoutEnd == null || u.LockoutEnd <= now);
+        }
+
+        var ordered = query.OrderBy(u => u.Email);
+        var paged = await ordered.ToPagedResultAsync(pagination);
+
+        // rollari yukle
+        var items = new List<UserDto>();
+        foreach (var user in paged.Items)
         {
             var roles = await _userManager.GetRolesAsync(user);
-            result.Add(new UserDto
+            items.Add(new UserDto
             {
                 Id = user.Id,
                 FullName = user.FullName,
                 Email = user.Email!,
+                EmailConfirmed = user.EmailConfirmed,
+                IsBlocked = user.LockoutEnd != null && user.LockoutEnd > DateTimeOffset.UtcNow,
                 Roles = roles
             });
         }
-        return result;
+
+        return new PagedResult<UserDto>
+        {
+            Items = items,
+            Page = paged.Page,
+            PageSize = paged.PageSize,
+            TotalCount = paged.TotalCount,
+            TotalPages = paged.TotalPages
+        };
     }
 
     public async Task AssignRoleAsync(string userId, string role)
@@ -176,6 +213,84 @@ public class AdminService : IAdminService
                 Description = t.Description,
                 CreatedAt = t.CreatedAt
             }).ToList()
+        };
+    }
+
+    // bank statistikasi — admin dashboard ucun
+    public async Task<AdminStatsDto> GetStatsAsync()
+    {
+        var now = DateTime.UtcNow;
+        var todayStart = DateTime.SpecifyKind(now.Date, DateTimeKind.Utc);
+        var weekStart = todayStart.AddDays(-7);
+        var monthStart = DateTime.SpecifyKind(new DateTime(now.Year, now.Month, 1), DateTimeKind.Utc);
+
+        // emeliyyat statistikasi (tamamlanmislar)
+        var completed = _context.Transactions.Where(t => t.Status == TransactionStatus.Completed);
+
+        var todayCount = await completed.CountAsync(t => t.CreatedAt >= todayStart);
+        var todayVolume = await completed.Where(t => t.CreatedAt >= todayStart)
+            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+        var weekCount = await completed.CountAsync(t => t.CreatedAt >= weekStart);
+        var weekVolume = await completed.Where(t => t.CreatedAt >= weekStart)
+            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+        var monthCount = await completed.CountAsync(t => t.CreatedAt >= monthStart);
+        var monthVolume = await completed.Where(t => t.CreatedAt >= monthStart)
+            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+        // umumi gostericiler
+        var totalUsers = await _userManager.Users.CountAsync();
+        var blockedUsers = await _userManager.Users
+            .CountAsync(u => u.LockoutEnd != null && u.LockoutEnd > DateTimeOffset.UtcNow);
+        var totalAccounts = await _context.Accounts.CountAsync();
+        var totalBalance = await _context.Accounts.SumAsync(a => (decimal?)a.Balance) ?? 0m;
+
+        // en aktiv 5 istifadeci (bu ay, cixan emeliyyatlara gore)
+        var topUsers = await _context.Transactions
+            .Where(t => t.Status == TransactionStatus.Completed
+                     && t.CreatedAt >= monthStart
+                     && t.FromAccountId != null)
+            .Include(t => t.FromAccount).ThenInclude(a => a!.Owner)
+            .GroupBy(t => t.FromAccount!.Owner!.Email)
+            .Select(g => new TopUserDto
+            {
+                Email = g.Key!,
+                TransactionCount = g.Count(),
+                TotalVolume = g.Sum(t => t.Amount)
+            })
+            .OrderByDescending(x => x.TransactionCount)
+            .Take(5)
+            .ToListAsync();
+
+        // provayder uzre kommunal odenis hecmi (bu ay)
+        var utilityByProvider = await _context.UtilityPayments
+            .Where(p => p.CreatedAt >= monthStart)
+            .Include(p => p.Provider)
+            .GroupBy(p => p.Provider.Name)
+            .Select(g => new ProviderVolumeDto
+            {
+                ProviderName = g.Key,
+                PaymentCount = g.Count(),
+                TotalAmount = g.Sum(p => p.Amount)
+            })
+            .OrderByDescending(x => x.TotalAmount)
+            .ToListAsync();
+
+        return new AdminStatsDto
+        {
+            TodayTransactionCount = todayCount,
+            TodayTransactionVolume = todayVolume,
+            WeekTransactionCount = weekCount,
+            WeekTransactionVolume = weekVolume,
+            MonthTransactionCount = monthCount,
+            MonthTransactionVolume = monthVolume,
+            TotalUsers = totalUsers,
+            BlockedUsers = blockedUsers,
+            TotalAccounts = totalAccounts,
+            TotalBalance = totalBalance,
+            TopActiveUsers = topUsers,
+            UtilityByProvider = utilityByProvider
         };
     }
 }

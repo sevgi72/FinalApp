@@ -26,6 +26,7 @@ namespace BankApiApp.Data
         public DbSet<UtilityPayment> UtilityPayments => Set<UtilityPayment>();
         public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
         public DbSet<RoundUpSetting> RoundUpSettings => Set<RoundUpSetting>();
+        public DbSet<ScheduledPayment> ScheduledPayments => Set<ScheduledPayment>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // VACIB: Identity cedvellerini (Users, Roles ve s.) qurur. Mutleq evvel cagirilir.

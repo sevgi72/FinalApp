@@ -145,4 +145,115 @@ public class AnalyticsService : IAnalyticsService
             DailyBreakdown = daily
         };
     }
+
+    // emeliyyati kateqoriyaya ayir (Description + Type-a gore)
+    private static string Categorize(Transaction t)
+    {
+        var desc = t.Description ?? "";
+
+        if (desc.StartsWith("Kommunal"))
+            return "Kommunal";
+        if (desc == "Round-up yigim")
+            return "Round-up yigim";
+        if (desc.Contains("Kredit") || desc.Contains("kredit"))
+            return "Kredit odenisi";
+
+        return t.Type switch
+        {
+            TransactionType.Withdraw => "Nagd cixaris",
+            TransactionType.Transfer => "Kocurme",
+            _ => "Diger"
+        };
+    }
+
+    // kateqoriya uzre xerc hesabati (secilen ay)
+    public async Task<SpendingReportDto> GetSpendingByCategoryAsync(string userId, int? year, int? month)
+    {
+        var now = DateTime.UtcNow;
+        var y = year ?? now.Year;
+        var m = month ?? now.Month;
+
+        var monthStart = DateTime.SpecifyKind(new DateTime(y, m, 1), DateTimeKind.Utc);
+        var monthEnd = monthStart.AddMonths(1);
+
+        // istifadecinin hesablari
+        var myAccountIds = await _context.Accounts
+            .Where(a => a.OwnerId == userId)
+            .Select(a => a.Id)
+            .ToListAsync();
+
+        // bu ayin CIXAN emeliyyatlari (xercler)
+        var spent = await _context.Transactions
+            .Where(t => t.FromAccountId != null
+                     && myAccountIds.Contains(t.FromAccountId.Value)
+                     && t.Status == TransactionStatus.Completed
+                     && t.CreatedAt >= monthStart
+                     && t.CreatedAt < monthEnd)
+            .ToListAsync();
+
+        var total = spent.Sum(t => t.Amount);
+
+        // kateqoriyalara bol
+        var categories = spent
+            .GroupBy(Categorize)
+            .Select(g => new CategorySpendingDto
+            {
+                Category = g.Key,
+                Amount = g.Sum(t => t.Amount),
+                Count = g.Count(),
+                Percentage = total > 0 ? Math.Round(g.Sum(t => t.Amount) / total * 100, 1) : 0
+            })
+            .OrderByDescending(c => c.Amount)
+            .ToList();
+
+        return new SpendingReportDto
+        {
+            Year = y,
+            Month = m,
+            TotalSpent = total,
+            Categories = categories
+        };
+    }
+
+    // son N ayin xerc trendi (ay-ay muqayise)
+    public async Task<List<MonthlySpendingDto>> GetMonthlySpendingAsync(string userId, int months)
+    {
+        if (months < 1) months = 6;
+        if (months > 24) months = 24;
+
+        var myAccountIds = await _context.Accounts
+            .Where(a => a.OwnerId == userId)
+            .Select(a => a.Id)
+            .ToListAsync();
+
+        var now = DateTime.UtcNow;
+        var start = DateTime.SpecifyKind(
+            new DateTime(now.Year, now.Month, 1).AddMonths(-(months - 1)), DateTimeKind.Utc);
+
+        var spent = await _context.Transactions
+            .Where(t => t.FromAccountId != null
+                     && myAccountIds.Contains(t.FromAccountId.Value)
+                     && t.Status == TransactionStatus.Completed
+                     && t.CreatedAt >= start)
+            .ToListAsync();
+
+        // ay-ay qrupla
+        var result = new List<MonthlySpendingDto>();
+        for (int i = 0; i < months; i++)
+        {
+            var monthStart = start.AddMonths(i);
+            var monthEnd = monthStart.AddMonths(1);
+
+            result.Add(new MonthlySpendingDto
+            {
+                Year = monthStart.Year,
+                Month = monthStart.Month,
+                TotalSpent = spent
+                    .Where(t => t.CreatedAt >= monthStart && t.CreatedAt < monthEnd)
+                    .Sum(t => t.Amount)
+            });
+        }
+
+        return result;
+    }
 }

@@ -68,7 +68,11 @@ RecurringJob.AddOrUpdate<ICleanupService>(
     "cleanup-unconfirmed-accounts",
     service => service.CleanupUnconfirmedAccountsAsync(),
     Cron.Daily);
-
+// Tekrarlanan is: planlanmis kommunal odenisler
+RecurringJob.AddOrUpdate<IScheduledPaymentService>(
+    "process-scheduled-payments",
+    service => service.ProcessDuePaymentsAsync(),
+    Cron.Daily);
 // 3. Ən sonda Hub-lar və Controller-lər xəritələnməlidir
 app.MapHub<BankApiApp.Hubs.ChatHub>("/chatHub");
 app.MapControllers();

@@ -7,7 +7,7 @@ namespace BankApiApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "SuperAdmin,Admin")]
+[Authorize]
 public class AnalyticsController : ControllerBase
 {
     private readonly IAnalyticsService _analyticsService;
@@ -31,5 +31,23 @@ public class AnalyticsController : ControllerBase
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         return Ok(await _analyticsService.GetSummaryAsync(userId, startDate, endDate));
+    }
+
+    // xerc kateqoriyalari (bu ay ve ya secilen ay)
+    [HttpGet("spending")]
+    [Authorize]
+    public async Task<IActionResult> GetSpending([FromQuery] int? year, [FromQuery] int? month)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _analyticsService.GetSpendingByCategoryAsync(userId, year, month));
+    }
+
+    // son N ayin xerc trendi
+    [HttpGet("spending/monthly")]
+    [Authorize]
+    public async Task<IActionResult> GetMonthlySpending([FromQuery] int months = 6)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _analyticsService.GetMonthlySpendingAsync(userId, months));
     }
 }

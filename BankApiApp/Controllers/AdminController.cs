@@ -1,4 +1,5 @@
 using BankApiApp.DTOs.Admin;
+using BankApiApp.DTOs.Common;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,10 +19,14 @@ public class AdminController : ControllerBase
         _adminService = adminService;
     }
 
+    // istifadeci siyahisi (axtaris + blok filtri)
     [HttpGet("users")]
     [Authorize(Roles = "SuperAdmin,Admin")]
-    public async Task<IActionResult> GetUsers()
-        => Ok(await _adminService.GetUsersAsync());
+    public async Task<IActionResult> GetUsers(
+        [FromQuery] PaginationParams pagination,
+        [FromQuery] string? search,
+        [FromQuery] bool? blocked)
+        => Ok(await _adminService.GetUsersAsync(pagination, search, blocked));
 
     [HttpPost("users/{userId}/roles")]
     [Authorize(Roles = "SuperAdmin")]
@@ -62,4 +67,10 @@ public class AdminController : ControllerBase
     [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> GetUserDetail(string userId)
         => Ok(await _adminService.GetUserDetailAsync(userId));
+
+    // bank statistikasi (dashboard)
+    [HttpGet("stats")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> GetStats()
+        => Ok(await _adminService.GetStatsAsync());
 }

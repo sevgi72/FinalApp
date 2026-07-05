@@ -1,37 +1,12 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    }
-  ],
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": [
-        {
-          "DockedWidth": 200,
-          "SelectedChildIndex": 0,
-          "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "AuthService.cs",
-              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\AuthService.cs",
-              "RelativeDocumentMoniker": "BankApiApp\\Services\\AuthService.cs",
-              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\AuthService.cs",
-              "RelativeToolTip": "BankApiApp\\Services\\AuthService.cs",
-              "ViewState": "AgIAAHUAAAAAAAAAAAA7wAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-05T13:11:42.043Z",
-              "EditorCaption": ""
-            }
-          ]
-        }
-      ]
+      "DocumentGroups": []
     }
   ]
 }
