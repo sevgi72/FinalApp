@@ -2,6 +2,7 @@ using BankApiApp.DTOs.Auth;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace BankApiApp.Controllers;
@@ -18,22 +19,27 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Register(RegisterDto dto)
         => Ok(new { message = await _authService.RegisterAsync(dto) });
 
     [HttpPost("confirm-email")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> ConfirmEmail(ConfirmEmailDto dto)
         => Ok(new { message = await _authService.ConfirmEmailAsync(dto) });
 
     [HttpPost("resend-code")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> ResendCode(ResendCodeDto dto)
         => Ok(new { message = await _authService.ResendConfirmationCodeAsync(dto) });
 
     [HttpPost("login")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Login(LoginDto dto)
         => Ok(await _authService.LoginAsync(dto));
 
     [HttpPost("verify-otp")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> VerifyOtp(VerifyTwoFactorDto dto)
         => Ok(await _authService.VerifyTwoFactorAsync(dto));
 
@@ -46,18 +52,22 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("google-login")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> GoogleLogin(GoogleLoginDto dto)
         => Ok(await _authService.GoogleLoginAsync(dto));
 
     [HttpPost("refresh-token")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto dto)
         => Ok(await _authService.RefreshTokenAsync(dto));
 
     [HttpPost("forgot-password")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
         => Ok(new { message = await _authService.ForgotPasswordAsync(dto) });
 
     [HttpPost("reset-password")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
         => Ok(new { message = await _authService.ResetPasswordAsync(dto) });
 

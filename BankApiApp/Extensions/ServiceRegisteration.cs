@@ -173,6 +173,7 @@ public static class ServiceRegistration
         services.AddScoped<ICleanupService, CleanupService>();
         services.AddScoped<IRoundUpService, RoundUpService>();
         services.AddScoped<IScheduledPaymentService, ScheduledPaymentService>();
+        services.AddScoped<ICashByCodeService, CashByCodeService>();
         return services;
     }
 

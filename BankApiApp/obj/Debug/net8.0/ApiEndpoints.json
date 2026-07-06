@@ -549,6 +549,64 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "BankApiApp.Controllers.CashByCodeController",
+    "Method": "Create",
+    "RelativePath": "api/CashByCode",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.CashByCode.CreateCashByCodeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.CashByCodeController",
+    "Method": "Cancel",
+    "RelativePath": "api/CashByCode/{id}/cancel",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.CashByCodeController",
+    "Method": "Claim",
+    "RelativePath": "api/CashByCode/claim",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.CashByCode.ClaimCashByCodeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.CashByCodeController",
+    "Method": "GetMy",
+    "RelativePath": "api/CashByCode/my",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BankApiApp.Controllers.ChatController",
     "Method": "GetConversation",
     "RelativePath": "api/Chat/conversation/{userId}",
