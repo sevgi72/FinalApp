@@ -96,6 +96,9 @@ public static class ServiceRegistration
                     // yalnız çat bağlantısında token-i query string-dən götür
                     if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chatHub"))
                         context.Token = accessToken;
+                    if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/chatHub") ||
+                    path.StartsWithSegments("/notificationHub")))
+                        context.Token = accessToken;
                     return Task.CompletedTask;
                 },
 
@@ -174,6 +177,11 @@ public static class ServiceRegistration
         services.AddScoped<IRoundUpService, RoundUpService>();
         services.AddScoped<IScheduledPaymentService, ScheduledPaymentService>();
         services.AddScoped<ICashByCodeService, CashByCodeService>();
+        services.AddScoped<IPaymentTemplateService, PaymentTemplateService>();
+        services.AddScoped<ICashbackService, CashbackService>();
+        services.AddScoped<IDepositService, DepositService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<ISavingsGoalService, SavingsGoalService>();
         return services;
     }
 

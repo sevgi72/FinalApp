@@ -549,6 +549,32 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "BankApiApp.Controllers.CashbackController",
+    "Method": "Redeem",
+    "RelativePath": "api/Cashback/redeem",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.Cashback.RedeemCashbackDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.CashbackController",
+    "Method": "GetStatus",
+    "RelativePath": "api/Cashback/status",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BankApiApp.Controllers.CashByCodeController",
     "Method": "Create",
     "RelativePath": "api/CashByCode",
@@ -636,6 +662,48 @@
     "ContainingType": "BankApiApp.Controllers.ChatController",
     "Method": "GetMyMessages",
     "RelativePath": "api/Chat/my-messages",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.DepositController",
+    "Method": "Open",
+    "RelativePath": "api/Deposit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.Deposit.CreateDepositDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.DepositController",
+    "Method": "Close",
+    "RelativePath": "api/Deposit/{id}/close",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.DepositController",
+    "Method": "GetMy",
+    "RelativePath": "api/Deposit/my",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -780,6 +848,68 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "BankApiApp.Controllers.NotificationController",
+    "Method": "MarkRead",
+    "RelativePath": "api/Notification/{id}/read",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.NotificationController",
+    "Method": "Broadcast",
+    "RelativePath": "api/Notification/broadcast",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.Notification.BroadcastNotificationDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.NotificationController",
+    "Method": "GetMy",
+    "RelativePath": "api/Notification/my",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.NotificationController",
+    "Method": "MarkAllRead",
+    "RelativePath": "api/Notification/read-all",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.NotificationController",
+    "Method": "GetUnreadCount",
+    "RelativePath": "api/Notification/unread-count",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BankApiApp.Controllers.PaymentController",
     "Method": "My",
     "RelativePath": "api/Payment/my",
@@ -817,6 +947,48 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "BankApiApp.Controllers.PaymentTemplateController",
+    "Method": "Create",
+    "RelativePath": "api/PaymentTemplate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.Utility.CreatePaymentTemplateDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.PaymentTemplateController",
+    "Method": "Delete",
+    "RelativePath": "api/PaymentTemplate/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.PaymentTemplateController",
+    "Method": "GetMy",
+    "RelativePath": "api/PaymentTemplate/my",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BankApiApp.Controllers.RoundUpController",
     "Method": "Disable",
     "RelativePath": "api/RoundUp/disable",
@@ -846,6 +1018,90 @@
     "ContainingType": "BankApiApp.Controllers.RoundUpController",
     "Method": "GetStatus",
     "RelativePath": "api/RoundUp/status",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.SavingsGoalController",
+    "Method": "Create",
+    "RelativePath": "api/SavingsGoal",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.SavingsGoal.CreateSavingsGoalDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.SavingsGoalController",
+    "Method": "Delete",
+    "RelativePath": "api/SavingsGoal/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.SavingsGoalController",
+    "Method": "Contribute",
+    "RelativePath": "api/SavingsGoal/{id}/contribute",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.SavingsGoal.ContributeGoalDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.SavingsGoalController",
+    "Method": "Withdraw",
+    "RelativePath": "api/SavingsGoal/{id}/withdraw",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.SavingsGoal.ContributeGoalDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.SavingsGoalController",
+    "Method": "GetMy",
+    "RelativePath": "api/SavingsGoal/my",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -994,6 +1250,22 @@
       {
         "Name": "dto",
         "Type": "BankApiApp.DTOs.Transactions.DepositDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.TransactionController",
+    "Method": "SelfTransfer",
+    "RelativePath": "api/Transaction/self-transfer",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.Transaction.SelfTransferDto",
         "IsRequired": true
       }
     ],

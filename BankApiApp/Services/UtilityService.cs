@@ -14,13 +14,14 @@ public class UtilityService : IUtilityService
     private readonly AppDbContext _context;
     private readonly ILimitService _limitService;
     private readonly IRoundUpService _roundUpService;
-
-    public UtilityService(AppDbContext context, ILimitService limitService, IRoundUpService roundUpService, ILocalizationService localizer)
+    private readonly ICashbackService _cashbackService;   
+    public UtilityService(AppDbContext context, ILimitService limitService, IRoundUpService roundUpService, ILocalizationService localizer, ICashbackService cashbackService)
     {
         _localizer = localizer;
         _context = context;
         _limitService = limitService;
         _roundUpService = roundUpService;
+        _cashbackService = cashbackService;
     }
 
     public async Task<List<UtilityProviderDto>> GetProvidersAsync()
@@ -97,10 +98,12 @@ public class UtilityService : IUtilityService
             });
 
             await _context.SaveChangesAsync();
+
             await trx.CommitAsync();
 
-            // [Round-up Qoşulması]: Kommunal ödəniş uğurla bitdikdən sonra yuvarlaqlaşdırma yığımı
             await _roundUpService.TryProcessAsync(account, dto.Amount);
+
+            await _cashbackService.TryEarnAsync(userId, dto.Amount, "Kommunal"); 
 
             return new UtilityPaymentDto
             {

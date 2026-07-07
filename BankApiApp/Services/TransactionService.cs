@@ -1,6 +1,7 @@
 using AutoMapper;
 using BankApiApp.Data;
 using BankApiApp.DTOs.Common;
+using BankApiApp.DTOs.Transaction;
 using BankApiApp.DTOs.Transactions;
 using BankApiApp.Exceptions;
 using BankApiApp.Extensions;
@@ -16,13 +17,16 @@ public class TransactionService : ITransactionService
     private readonly ILimitService _limitService;
     private readonly IRoundUpService _roundUpService;
     private readonly ILocalizationService _localizer;
-    public TransactionService(AppDbContext context, IMapper mapper, ILimitService limitService, IRoundUpService roundUpService, ILocalizationService localizer)
+    private readonly INotificationService _notificationService;
+    public TransactionService(AppDbContext context, IMapper mapper, ILimitService limitService, IRoundUpService roundUpService,
+        ILocalizationService localizer, INotificationService notificationService)
     {
         _context = context;
         _mapper = mapper;
         _limitService = limitService;
         _roundUpService = roundUpService;
         _localizer = localizer;
+        _notificationService = notificationService;
     }
     public async Task<PagedResult<TransactionDto>> GetAccountTransactionsAsync(
     string userId, Guid accountId, PaginationParams pagination)
@@ -71,7 +75,8 @@ public class TransactionService : ITransactionService
 
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync();
-
+        await _notificationService.SendToUserAsync(userId,
+    "Balans artimi", $"Hesabiniza {dto.Amount:0.00} AZN daxil oldu.", "Transaction");
         return _mapper.Map<TransactionDto>(transaction);
     }
 
@@ -316,5 +321,51 @@ public class TransactionService : ITransactionService
             throw new BadRequestException(_localizer.Get("AccountNotActive"));
 
         return account;
+    }
+    // oz hesablari arasi kocurme (limitsiz - oz pulu)
+    public async Task<TransactionDto> SelfTransferAsync(string userId, SelfTransferDto dto)
+    {
+        if (dto.Amount <= 0)
+            throw new BadRequestException(_localizer.Get("AmountMustBePositive"));
+
+        if (dto.FromAccountId == dto.ToAccountId)
+            throw new BadRequestException(_localizer.Get("SameAccountTransfer"));
+
+        // her iki hesab da bu istifadeciye aid olmalidir
+        var fromAccount = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == dto.FromAccountId && a.OwnerId == userId)
+            ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
+
+        var toAccount = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == dto.ToAccountId && a.OwnerId == userId)
+            ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
+
+        if (fromAccount.Status != AccountStatus.Active || toAccount.Status != AccountStatus.Active)
+            throw new BadRequestException(_localizer.Get("AccountNotActive"));
+
+        if (fromAccount.Balance < dto.Amount)
+            throw new BadRequestException(_localizer.Get("InsufficientBalance"));
+
+        // atomik kocurme (limit yoxlamasi yoxdur - oz pulu)
+        await using var trx = await _context.Database.BeginTransactionAsync();
+
+        fromAccount.Balance -= dto.Amount;
+        toAccount.Balance += dto.Amount;
+
+        var transaction = new Transaction
+        {
+            Amount = dto.Amount,
+            Type = TransactionType.Transfer,
+            Status = TransactionStatus.Completed,
+            FromAccountId = fromAccount.Id,
+            ToAccountId = toAccount.Id,
+            Description = "Hesablar arasi kocurme"
+        };
+        _context.Transactions.Add(transaction);
+
+        await _context.SaveChangesAsync();
+        await trx.CommitAsync();
+
+        return _mapper.Map<TransactionDto>(transaction);
     }
 }

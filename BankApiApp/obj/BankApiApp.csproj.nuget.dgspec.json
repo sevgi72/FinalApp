@@ -52,6 +52,10 @@
           "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
+            "AspNetCore.HealthChecks.NpgSql": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
             "AutoMapper": {
               "target": "Package",
               "version": "[16.1.1, )"

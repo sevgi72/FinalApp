@@ -1,4 +1,5 @@
 using BankApiApp.DTOs.Common;
+using BankApiApp.DTOs.Transaction;
 using BankApiApp.DTOs.Transactions;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -69,5 +70,13 @@ public class TransactionController : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var (pdf, fileName) = await _transactionService.GetReceiptPdfAsync(userId, id);
         return File(pdf, "application/pdf", fileName);
+    }
+
+    // oz hesablari arasi transfer
+    [HttpPost("self-transfer")]
+    public async Task<IActionResult> SelfTransfer(SelfTransferDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _transactionService.SelfTransferAsync(userId, dto));
     }
 }

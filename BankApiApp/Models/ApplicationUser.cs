@@ -31,6 +31,9 @@ namespace BankApiApp.Models
 
         // Google login ucun
         public string? GoogleId { get; set; }   // Google istifadecisinin unikal ID-si (null = adi qeydiyyat)
+
+        // kesbek bonus balansi (esas balansdan ayri)
+        public decimal CashbackBalance { get; set; } = 0;
     }
 
 }

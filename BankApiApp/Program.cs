@@ -7,6 +7,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // CORS — kenar sehifeler (cat, frontend) backend-e qosula bilsen
@@ -21,7 +22,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// rate limiting — brute-force ve flood qarsisi
+// rate limiting — brute-force ve flood qarsisibu
 builder.Services.AddRateLimiter(options =>
 {
     // limit asilanda 429 qaytar
@@ -56,6 +57,13 @@ builder.Services.AddRateLimiter(options =>
             cancellationToken);
     };
 });
+
+// Health check — sistemin sagligini yoxlayir (DB daxil)
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("DefaultConnection")!,
+        name: "postgresql",
+        tags: new[] { "db" });
 
 // Butun servis qeydiyyatlari bir setirde
 builder.Services.AddApplicationServices(builder.Configuration);
@@ -105,31 +113,56 @@ app.UseAuthorization();  // Istifadecinin rolunu yoxlayir
 // 2. Sonra ise paneller ve endpoint-ler gelmelidir
 app.UseHangfireDashboard("/hangfire");
 
-// Tekrarlanan is
+// Tekrarlanan isler (Hangfire)
 RecurringJob.AddOrUpdate<ILoanService>(
     "process-loan-payments",
     service => service.ProcessDuePaymentsAsync(),
     Cron.Daily);
 
-// Tekrarlanan is: tesdiqlenmemis kohne hesablari temizle
 RecurringJob.AddOrUpdate<ICleanupService>(
     "cleanup-unconfirmed-accounts",
     service => service.CleanupUnconfirmedAccountsAsync(),
     Cron.Daily);
 
-// Tekrarlanan is: planlanmis kommunal odenisler
 RecurringJob.AddOrUpdate<IScheduledPaymentService>(
     "process-scheduled-payments",
     service => service.ProcessDuePaymentsAsync(),
     Cron.Daily);
 
-// Tekrarlanan is: vaxti kecmis kodla kocurmeleri qaytar
 RecurringJob.AddOrUpdate<ICashByCodeService>(
     "expire-cash-by-code",
     service => service.ExpireOldCodesAsync(),
     Cron.Hourly);
 
-// 3. En sonda Hub-lar ve Controller-ler xeritelenmelidir
+RecurringJob.AddOrUpdate<IDepositService>(
+    "accrue-deposit-interest",
+    service => service.AccrueInterestAsync(),
+    Cron.Monthly);
+// 3. En sonda Hub-lar, Controller-ler ve Health Check-ler xeritelenmelidir
+
+// /health — sistemin veziyyeti (JSON cavab qaytarir ve Rate Limiting-den azaddir)
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+
+        var result = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),                  // Healthy / Degraded / Unhealthy
+            totalDuration = report.TotalDuration.TotalMilliseconds + " ms",
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                duration = e.Value.Duration.TotalMilliseconds + " ms"
+            })
+        });
+
+        await context.Response.WriteAsync(result);
+    }
+}).DisableRateLimiting();
+app.MapHub<BankApiApp.Hubs.NotificationHub>("/notificationHub");
 app.MapHub<BankApiApp.Hubs.ChatHub>("/chatHub");
 app.MapControllers();
 
