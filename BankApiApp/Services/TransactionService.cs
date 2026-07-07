@@ -62,6 +62,8 @@ public class TransactionService : ITransactionService
             throw new BadRequestException(_localizer.Get("AmountMustBePositive"));
 
         var account = await GetOwnedAccountAsync(userId, dto.AccountId);
+
+        // Balansı artırırıq
         account.Balance += dto.Amount;
 
         var transaction = new Transaction
@@ -70,13 +72,20 @@ public class TransactionService : ITransactionService
             Type = TransactionType.Deposit,
             Status = TransactionStatus.Completed,
             ToAccountId = account.Id,
+            ToBalanceSnapshot = account.Balance,   // yatirimdan sonra alan hesabin balansi
             Description = "Deposit"
         };
 
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync();
-        await _notificationService.SendToUserAsync(userId,
-    "Balans artimi", $"Hesabiniza {dto.Amount:0.00} AZN daxil oldu.", "Transaction");
+
+        // notifikasiya gonderirik (istifadeciye)
+        await _notificationService.SendToUserAsync(
+            userId,
+            "Balans artimi",
+            $"Hesabiniza {dto.Amount:0.00} AZN daxil oldu.",
+            "Transaction");
+
         return _mapper.Map<TransactionDto>(transaction);
     }
 
@@ -93,6 +102,7 @@ public class TransactionService : ITransactionService
         // limit yoxlamasi (gunluk/ayliq/illik)
         await _limitService.EnsureWithinLimitsAsync(account, dto.Amount);
 
+        // Balansı azaldırıq
         account.Balance -= dto.Amount;
 
         var transaction = new Transaction
@@ -101,13 +111,14 @@ public class TransactionService : ITransactionService
             Type = TransactionType.Withdraw,
             Status = TransactionStatus.Completed,
             FromAccountId = account.Id,
+            FromBalanceSnapshot = account.Balance, // gonderen hesabin anlıq balansi
             Description = "Withdraw"
         };
 
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync();
 
-        // [Round-up Qoşulması]: Əsas əməliyyat tamamlandıqdan sonra yığım cəhdi
+        // esas emeliyatdan sonra yigim cehdini edirik (round-up)
         await _roundUpService.TryProcessAsync(account, dto.Amount);
 
         return _mapper.Map<TransactionDto>(transaction);
@@ -130,13 +141,14 @@ public class TransactionService : ITransactionService
         if (fromAccount.Balance < dto.Amount)
             throw new BadRequestException(_localizer.Get("InsufficientBalance"));
 
-        // limit yoxlamasi (gunluk/ayliq/illik)
+        //limit yoxlamasi (gunluk/ayliq/illik)
         await _limitService.EnsureWithinLimitsAsync(fromAccount, dto.Amount);
 
-        // ATOMIC: ya hamisi bas verir, ya hec biri
+        //ya hamisi bas verir, ya hec biri
         await using var dbTransaction = await _context.Database.BeginTransactionAsync();
         try
         {
+            // Balansları dəyişirik
             fromAccount.Balance -= dto.Amount;
             toAccount.Balance += dto.Amount;
 
@@ -147,6 +159,8 @@ public class TransactionService : ITransactionService
                 Status = TransactionStatus.Completed,
                 FromAccountId = fromAccount.Id,
                 ToAccountId = toAccount.Id,
+                FromBalanceSnapshot = fromAccount.Balance, 
+                ToBalanceSnapshot = toAccount.Balance,     
                 Description = dto.Description
             };
 
@@ -155,7 +169,6 @@ public class TransactionService : ITransactionService
 
             await dbTransaction.CommitAsync();
 
-            // [Round-up Qoşulması]: Tranzaksiya Commit olunduqdan sonra yığım cəhdi
             await _roundUpService.TryProcessAsync(fromAccount, dto.Amount);
 
             return _mapper.Map<TransactionDto>(transaction);
@@ -218,7 +231,6 @@ public class TransactionService : ITransactionService
             await _context.SaveChangesAsync();
             await trx.CommitAsync();
 
-            // [Round-up Qoşulması]: Tranzaksiya Commit olunduqdan sonra yığım cəhdi
             await _roundUpService.TryProcessAsync(fromAccount, dto.Amount);
         }
         catch

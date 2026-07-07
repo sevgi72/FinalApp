@@ -10,4 +10,6 @@ public class TransactionDto
     public Guid? FromAccountId { get; set; }
     public Guid? ToAccountId { get; set; }
     public DateTime CreatedAt { get; set; }
+    public decimal? FromBalanceSnapshot { get; set; }
+    public decimal? ToBalanceSnapshot { get; set; }
 }

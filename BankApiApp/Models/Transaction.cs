@@ -22,5 +22,11 @@ namespace BankApiApp.Models
 
         public Guid? ToAccountId { get; set; }
         public Account? ToAccount { get; set; }
+        // balance snapshot — emeliyyatdan sonra hesablarin balansi (immutable ledger)
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? FromBalanceSnapshot { get; set; }   // gonderen hesabin sonraki balansi
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? ToBalanceSnapshot { get; set; }     // alan hesabin sonraki balansi
     }
 }

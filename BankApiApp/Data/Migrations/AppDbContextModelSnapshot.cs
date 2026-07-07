@@ -801,6 +801,9 @@ namespace BankApiApp.Data.Migrations
                     b.Property<Guid?>("FromAccountId")
                         .HasColumnType("uuid");
 
+                    b.Property<decimal?>("FromBalanceSnapshot")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -808,6 +811,9 @@ namespace BankApiApp.Data.Migrations
 
                     b.Property<Guid?>("ToAccountId")
                         .HasColumnType("uuid");
+
+                    b.Property<decimal?>("ToBalanceSnapshot")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Type")
                         .IsRequired()
