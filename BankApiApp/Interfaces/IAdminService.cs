@@ -12,4 +12,6 @@ public interface IAdminService
     Task<string> UnblockUserAsync(string callerUserId, string targetUserId);
     Task<UserDetailDto> GetUserDetailAsync(string targetUserId);
     Task<AdminStatsDto> GetStatsAsync();
+    Task<string> FreezeAccountAsync(Guid accountId, string? reason);
+    Task<string> UnfreezeAccountAsync(Guid accountId);
 }

@@ -18,8 +18,10 @@ public class TransactionService : ITransactionService
     private readonly IRoundUpService _roundUpService;
     private readonly ILocalizationService _localizer;
     private readonly INotificationService _notificationService;
+    private readonly IBalanceAlertService _balanceAlertService; // yeni
+
     public TransactionService(AppDbContext context, IMapper mapper, ILimitService limitService, IRoundUpService roundUpService,
-        ILocalizationService localizer, INotificationService notificationService)
+        ILocalizationService localizer, INotificationService notificationService, IBalanceAlertService balanceAlertService)
     {
         _context = context;
         _mapper = mapper;
@@ -27,7 +29,9 @@ public class TransactionService : ITransactionService
         _roundUpService = roundUpService;
         _localizer = localizer;
         _notificationService = notificationService;
+        _balanceAlertService = balanceAlertService; // yeni
     }
+
     public async Task<PagedResult<TransactionDto>> GetAccountTransactionsAsync(
     string userId, Guid accountId, PaginationParams pagination)
     {
@@ -56,12 +60,17 @@ public class TransactionService : ITransactionService
             TotalPages = paged.TotalPages
         };
     }
+
     public async Task<TransactionDto> DepositAsync(string userId, DepositDto dto)
     {
         if (dto.Amount <= 0)
             throw new BadRequestException(_localizer.Get("AmountMustBePositive"));
 
         var account = await GetOwnedAccountAsync(userId, dto.AccountId);
+
+        // dondurulmus hesaba pul girmesin
+        if (account.Status != AccountStatus.Active)
+            throw new BadRequestException(_localizer.Get("AccountNotActive"));
 
         // Balansı artırırıq
         account.Balance += dto.Amount;
@@ -102,6 +111,8 @@ public class TransactionService : ITransactionService
         // limit yoxlamasi (gunluk/ayliq/illik)
         await _limitService.EnsureWithinLimitsAsync(account, dto.Amount);
 
+        var balanceBefore = account.Balance;   // azalmadan evvel
+
         // Balansı azaldırıq
         account.Balance -= dto.Amount;
 
@@ -117,6 +128,9 @@ public class TransactionService : ITransactionService
 
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync();
+
+        // low-balance yoxlamasi
+        await _balanceAlertService.CheckAndAlertAsync(account, balanceBefore);
 
         // esas emeliyatdan sonra yigim cehdini edirik (round-up)
         await _roundUpService.TryProcessAsync(account, dto.Amount);
@@ -136,6 +150,11 @@ public class TransactionService : ITransactionService
 
         if (toAccount == null)
             throw new NotFoundException(_localizer.Get("ReceiverAccountNotFound"));
+
+        // alan hesabin aktivlik yoxlamasi
+        if (toAccount.Status != AccountStatus.Active)
+            throw new BadRequestException(_localizer.Get("ReceiverAccountNotActive"));
+
         if (fromAccount.Id == toAccount.Id)
             throw new BadRequestException(_localizer.Get("SameAccountTransfer"));
         if (fromAccount.Balance < dto.Amount)
@@ -143,6 +162,8 @@ public class TransactionService : ITransactionService
 
         //limit yoxlamasi (gunluk/ayliq/illik)
         await _limitService.EnsureWithinLimitsAsync(fromAccount, dto.Amount);
+
+        var balanceBefore = fromAccount.Balance; // azalmadan evvel
 
         //ya hamisi bas verir, ya hec biri
         await using var dbTransaction = await _context.Database.BeginTransactionAsync();
@@ -159,8 +180,8 @@ public class TransactionService : ITransactionService
                 Status = TransactionStatus.Completed,
                 FromAccountId = fromAccount.Id,
                 ToAccountId = toAccount.Id,
-                FromBalanceSnapshot = fromAccount.Balance, 
-                ToBalanceSnapshot = toAccount.Balance,     
+                FromBalanceSnapshot = fromAccount.Balance,
+                ToBalanceSnapshot = toAccount.Balance,
                 Description = dto.Description
             };
 
@@ -168,6 +189,9 @@ public class TransactionService : ITransactionService
             await _context.SaveChangesAsync();
 
             await dbTransaction.CommitAsync();
+
+            // low-balance yoxlamasi (commit-den sonra)
+            await _balanceAlertService.CheckAndAlertAsync(fromAccount, balanceBefore);
 
             await _roundUpService.TryProcessAsync(fromAccount, dto.Amount);
 
@@ -192,6 +216,10 @@ public class TransactionService : ITransactionService
         if (fromAccount.OwnerId != userId)
             throw new BadRequestException(_localizer.Get("AccountNotYours"));
 
+        // gonderen hesabin aktivlik yoxlamasi
+        if (fromAccount.Status != AccountStatus.Active)
+            throw new BadRequestException(_localizer.Get("AccountNotActive"));
+
         var cardNumber = (dto.ToCardNumber ?? string.Empty).Replace(" ", "");
 
         var toCard = await _context.Cards
@@ -204,6 +232,10 @@ public class TransactionService : ITransactionService
 
         var toAccount = toCard.Account;
 
+        // alan hesabin aktivlik yoxlamasi
+        if (toAccount.Status != AccountStatus.Active)
+            throw new BadRequestException(_localizer.Get("ReceiverAccountNotActive"));
+
         if (toAccount.Id == fromAccount.Id)
             throw new BadRequestException(_localizer.Get("SameAccountTransfer"));
 
@@ -211,6 +243,8 @@ public class TransactionService : ITransactionService
             throw new BadRequestException(_localizer.Get("InsufficientBalance"));
 
         await _limitService.EnsureWithinLimitsAsync(fromAccount, dto.Amount);
+
+        var balanceBefore = fromAccount.Balance; // azalmadan evvel
 
         await using var trx = await _context.Database.BeginTransactionAsync();
         try
@@ -225,11 +259,16 @@ public class TransactionService : ITransactionService
                 Status = TransactionStatus.Completed,
                 Description = dto.Description ?? _localizer.Get("DefaultTransferDescription").Replace("{cardNumber}", $"**** {cardNumber[^4..]}"),
                 FromAccountId = fromAccount.Id,
-                ToAccountId = toAccount.Id
+                ToAccountId = toAccount.Id,
+                FromBalanceSnapshot = fromAccount.Balance,   // gonderenin sonraki balansi
+                ToBalanceSnapshot = toAccount.Balance        // alanin sonraki balansi
             });
 
             await _context.SaveChangesAsync();
             await trx.CommitAsync();
+
+            // low-balance yoxlamasi (commit-den sonra)
+            await _balanceAlertService.CheckAndAlertAsync(fromAccount, balanceBefore);
 
             await _roundUpService.TryProcessAsync(fromAccount, dto.Amount);
         }
@@ -334,6 +373,7 @@ public class TransactionService : ITransactionService
 
         return account;
     }
+
     // oz hesablari arasi kocurme (limitsiz - oz pulu)
     public async Task<TransactionDto> SelfTransferAsync(string userId, SelfTransferDto dto)
     {
@@ -358,6 +398,8 @@ public class TransactionService : ITransactionService
         if (fromAccount.Balance < dto.Amount)
             throw new BadRequestException(_localizer.Get("InsufficientBalance"));
 
+        var balanceBefore = fromAccount.Balance; // azalmadan evvel
+
         // atomik kocurme (limit yoxlamasi yoxdur - oz pulu)
         await using var trx = await _context.Database.BeginTransactionAsync();
 
@@ -371,12 +413,17 @@ public class TransactionService : ITransactionService
             Status = TransactionStatus.Completed,
             FromAccountId = fromAccount.Id,
             ToAccountId = toAccount.Id,
+            FromBalanceSnapshot = fromAccount.Balance,   // gonderenin sonraki balansi
+            ToBalanceSnapshot = toAccount.Balance,        // alanin sonraki balansi
             Description = "Hesablar arasi kocurme"
         };
         _context.Transactions.Add(transaction);
 
         await _context.SaveChangesAsync();
         await trx.CommitAsync();
+
+        // low-balance yoxlamasi (commit-den sonra)
+        await _balanceAlertService.CheckAndAlertAsync(fromAccount, balanceBefore);
 
         return _mapper.Map<TransactionDto>(transaction);
     }

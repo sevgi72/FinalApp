@@ -182,6 +182,8 @@ public static class ServiceRegistration
         services.AddScoped<IDepositService, DepositService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<ISavingsGoalService, SavingsGoalService>();
+        services.AddScoped<IStatementService, StatementService>();
+        services.AddScoped<IBalanceAlertService, BalanceAlertService>();
         return services;
     }
 

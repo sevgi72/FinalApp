@@ -38,5 +38,10 @@ namespace BankApiApp.Models
         // PostgreSQL concurrency token — xmin sistem sutununa baglanir
         [Timestamp]
         public uint Version { get; set; }
+
+
+        // asagi balans xeberdarligi ucun hedd (null = xeberdarliq yoxdur)
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? LowBalanceThreshold { get; set; }
     }
 }

@@ -73,4 +73,16 @@ public class AdminController : ControllerBase
     [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> GetStats()
         => Ok(await _adminService.GetStatsAsync());
+
+    // hesabi dondur (subheli fealiyyet)
+    [HttpPost("accounts/{accountId}/freeze")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> FreezeAccount(Guid accountId, [FromQuery] string? reason)
+        => Ok(new { message = await _adminService.FreezeAccountAsync(accountId, reason) });
+
+    // hesabi geri ac
+    [HttpPost("accounts/{accountId}/unfreeze")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> UnfreezeAccount(Guid accountId)
+        => Ok(new { message = await _adminService.UnfreezeAccountAsync(accountId) });
 }

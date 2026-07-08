@@ -1,12 +1,37 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\controllers\\balancealertcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\controllers\\balancealertcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "BalanceAlertController.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Controllers\\BalanceAlertController.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Controllers\\BalanceAlertController.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Controllers\\BalanceAlertController.cs",
+              "RelativeToolTip": "BankApiApp\\Controllers\\BalanceAlertController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-08T16:05:31.064Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -47,6 +47,9 @@ namespace BankApiApp.Data.Migrations
                     b.Property<decimal?>("DailyLimit")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal?>("LowBalanceThreshold")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal?>("MonthlyLimit")
                         .HasColumnType("decimal(18,2)");
 

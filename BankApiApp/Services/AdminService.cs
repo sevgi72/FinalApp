@@ -14,19 +14,23 @@ public class AdminService : IAdminService
     private readonly ILocalizationService _localizer;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
-    private readonly AppDbContext _context; // [DÜZƏLİŞ]: Çatışmayan DbContext əlavə edildi
+    private readonly AppDbContext _context;
+    private readonly INotificationService _notificationService;
 
     public AdminService(
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
-        AppDbContext context) // [DÜZƏLİŞ]: Konstruktora inject edildi
+        AppDbContext context,
+        INotificationService notificationService,
+        ILocalizationService localizer) // [DÜZƏLİŞ]: localizer inject edildi
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _context = context;
+        _notificationService = notificationService;
+        _localizer = localizer;
     }
 
-    // istifadeci siyahisi (axtaris + filtrle)
     // istifadeci siyahisi (axtaris + filtrle)
     public async Task<PagedResult<UserDto>> GetUsersAsync(
         PaginationParams pagination, string? search, bool? blocked)
@@ -292,5 +296,51 @@ public class AdminService : IAdminService
             TopActiveUsers = topUsers,
             UtilityByProvider = utilityByProvider
         };
+    }
+
+    // hesabi dondur (subheli fealiyyet) - user blokundan ferqli, yalniz bu hesab
+    public async Task<string> FreezeAccountAsync(Guid accountId, string? reason)
+    {
+        var account = await _context.Accounts
+            .Include(a => a.Owner)
+            .FirstOrDefaultAsync(a => a.Id == accountId)
+            ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
+
+        if (account.Status == AccountStatus.Blocked)
+            throw new BadRequestException("Hesab artiq dondurulub.");
+
+        if (account.Status == AccountStatus.Closed)
+            throw new BadRequestException("Bagli hesab dondurula bilmez.");
+
+        account.Status = AccountStatus.Blocked;
+        await _context.SaveChangesAsync();
+
+        // sahibe bildiris (varsa notification service)
+        var msg = string.IsNullOrEmpty(reason)
+            ? "Hesabiniz subheli fealiyyet sebebiyle dondurulub. Destekle elaqe saxlayin."
+            : $"Hesabiniz dondurulub. Sebeb: {reason}";
+        await _notificationService.SendToUserAsync(account.OwnerId,
+            "Hesab donduruldu", msg, "System");
+
+        return $"{account.AccountNumber} nomreli hesab dondurudu.";
+    }
+
+    // hesabi geri ac
+    public async Task<string> UnfreezeAccountAsync(Guid accountId)
+    {
+        var account = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == accountId)
+            ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
+
+        if (account.Status != AccountStatus.Blocked)
+            throw new BadRequestException("Hesab dondurulmuş veziyyetde deyil.");
+
+        account.Status = AccountStatus.Active;
+        await _context.SaveChangesAsync();
+
+        await _notificationService.SendToUserAsync(account.OwnerId,
+            "Hesab aktivlesdirildi", "Hesabiniz yeniden aktivdir.", "System");
+
+        return $"{account.AccountNumber} nomreli hesab yeniden aktivdir.";
     }
 }
