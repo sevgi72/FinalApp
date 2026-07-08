@@ -80,6 +80,37 @@
   },
   {
     "ContainingType": "BankApiApp.Controllers.AdminController",
+    "Method": "GetCommissionRules",
+    "RelativePath": "api/Admin/commission-rules",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.AdminController",
+    "Method": "UpdateCommissionRule",
+    "RelativePath": "api/Admin/commission-rules/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.Commission.UpdateCommissionRuleDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.AdminController",
     "Method": "GetStats",
     "RelativePath": "api/Admin/stats",
     "HttpMethod": "GET",

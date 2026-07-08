@@ -184,6 +184,7 @@ public static class ServiceRegistration
         services.AddScoped<ISavingsGoalService, SavingsGoalService>();
         services.AddScoped<IStatementService, StatementService>();
         services.AddScoped<IBalanceAlertService, BalanceAlertService>();
+        services.AddScoped<ICommissionService, CommissionService>();
         return services;
     }
 

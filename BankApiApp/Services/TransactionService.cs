@@ -18,10 +18,11 @@ public class TransactionService : ITransactionService
     private readonly IRoundUpService _roundUpService;
     private readonly ILocalizationService _localizer;
     private readonly INotificationService _notificationService;
-    private readonly IBalanceAlertService _balanceAlertService; // yeni
+    private readonly IBalanceAlertService _balanceAlertService; 
+    private readonly ICommissionService _commissionService; // yeni
 
     public TransactionService(AppDbContext context, IMapper mapper, ILimitService limitService, IRoundUpService roundUpService,
-        ILocalizationService localizer, INotificationService notificationService, IBalanceAlertService balanceAlertService)
+        ILocalizationService localizer, INotificationService notificationService, IBalanceAlertService balanceAlertService, ICommissionService commissionService)
     {
         _context = context;
         _mapper = mapper;
@@ -30,6 +31,7 @@ public class TransactionService : ITransactionService
         _localizer = localizer;
         _notificationService = notificationService;
         _balanceAlertService = balanceAlertService; // yeni
+        _commissionService = commissionService; // yeni
     }
 
     public async Task<PagedResult<TransactionDto>> GetAccountTransactionsAsync(
@@ -157,22 +159,28 @@ public class TransactionService : ITransactionService
 
         if (fromAccount.Id == toAccount.Id)
             throw new BadRequestException(_localizer.Get("SameAccountTransfer"));
-        if (fromAccount.Balance < dto.Amount)
+
+        // 1. Komissiya hesablanır
+        var commission = await _commissionService.CalculateAsync("Transfer", dto.Amount);
+
+        // 2. Balans yoxlaması (əsas məbləğ + komissiya)
+        if (fromAccount.Balance < dto.Amount + commission)
             throw new BadRequestException(_localizer.Get("InsufficientBalance"));
 
-        //limit yoxlamasi (gunluk/ayliq/illik)
+        // limit yoxlamasi (bura komissiyalı və ya komissiyasız məbləğ vermək biznes məntiqinizdən asılıdır, adətən əsas məbləğ yoxlanılır)
         await _limitService.EnsureWithinLimitsAsync(fromAccount, dto.Amount);
 
-        var balanceBefore = fromAccount.Balance; // azalmadan evvel
+        var balanceBefore = fromAccount.Balance; // azalmadan evvelki ilkin balans
 
         //ya hamisi bas verir, ya hec biri
         await using var dbTransaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            // Balansları dəyişirik
-            fromAccount.Balance -= dto.Amount;
-            toAccount.Balance += dto.Amount;
+            // 3. Balansları dəyişirik
+            fromAccount.Balance -= (dto.Amount + commission); // gonderenden esas + komissiya cixir
+            toAccount.Balance += dto.Amount;                  // alan yalniz esas meblegi alir
 
+            // 4. Əsas köçürmə tranzaksiyası qeyd olunur
             var transaction = new Transaction
             {
                 Amount = dto.Amount,
@@ -180,14 +188,28 @@ public class TransactionService : ITransactionService
                 Status = TransactionStatus.Completed,
                 FromAccountId = fromAccount.Id,
                 ToAccountId = toAccount.Id,
+                // Komissiya da çıxıldıqdan sonrakı yekun balans snapshot-a yazılır
                 FromBalanceSnapshot = fromAccount.Balance,
                 ToBalanceSnapshot = toAccount.Balance,
                 Description = dto.Description
             };
-
             _context.Transactions.Add(transaction);
-            await _context.SaveChangesAsync();
 
+            // 5. Əgər komissiya varsa, ayrıca tranzaksiya kimi qeyd olunur
+            if (commission > 0)
+            {
+                _context.Transactions.Add(new Transaction
+                {
+                    Amount = commission,
+                    Type = TransactionType.Withdraw,
+                    Status = TransactionStatus.Completed,
+                    FromAccountId = fromAccount.Id,
+                    FromBalanceSnapshot = fromAccount.Balance, // Ən son balans (komissiya artıq çıxılıb)
+                    Description = "Kocurme komissiyasi"
+                });
+            }
+
+            await _context.SaveChangesAsync();
             await dbTransaction.CommitAsync();
 
             // low-balance yoxlamasi (commit-den sonra)

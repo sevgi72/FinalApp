@@ -32,6 +32,7 @@ namespace BankApiApp.Data
         public DbSet<Deposit> Deposits => Set<Deposit>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<SavingsGoal> SavingsGoals => Set<SavingsGoal>();
+        public DbSet<CommissionRule> CommissionRules => Set<CommissionRule>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // VACIB: Identity cedvellerini (Users, Roles ve s.) qurur. Mutleq evvel cagirilir.

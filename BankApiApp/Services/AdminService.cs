@@ -119,10 +119,10 @@ public class AdminService : IAdminService
     public async Task<string> BlockUserAsync(string callerUserId, string targetUserId)
     {
         var target = await _userManager.FindByIdAsync(targetUserId)
-            ?? throw new NotFoundException(_localizer.Get("İstifaditaplmad"));
+            ?? throw new NotFoundException(_localizer.Get("UserNotFound"));
 
         if (callerUserId == targetUserId)
-            throw new BadRequestException(_localizer.Get("zhesabnzbloklayabilmzsiniz"));
+            throw new BadRequestException(_localizer.Get("CannotBlockOwnAccount"));
 
         var targetRoles = await _userManager.GetRolesAsync(target);
         var caller = await _userManager.FindByIdAsync(callerUserId);
@@ -132,10 +132,10 @@ public class AdminService : IAdminService
         bool callerIsSuper = callerRoles.Contains("SuperAdmin");
 
         if (targetIsPrivileged && !callerIsSuper)
-            throw new BadRequestException(_localizer.Get("AdminhesablarnyalnzSuperAdminidaredbilr"));
+            throw new BadRequestException(_localizer.Get("AdminAccountsSuperAdminOnly"));
 
         if (targetRoles.Contains("SuperAdmin"))
-            throw new BadRequestException(_localizer.Get("SuperAdminbloklanabilmz"));
+            throw new BadRequestException(_localizer.Get("SuperAdminCannotBeBlocked"));
 
         await _userManager.SetLockoutEnabledAsync(target, true);
         await _userManager.SetLockoutEndDateAsync(target, DateTimeOffset.UtcNow.AddYears(100));
@@ -164,7 +164,7 @@ public class AdminService : IAdminService
 
         bool targetIsPrivileged = targetRoles.Contains("Admin") || targetRoles.Contains("SuperAdmin");
         if (targetIsPrivileged && !callerRoles.Contains("SuperAdmin"))
-            throw new BadRequestException(_localizer.Get("AdminhesablarnyalnzSuperAdminidaredbilr"));
+            throw new BadRequestException(_localizer.Get("AdminAccountsSuperAdminOnly"));
 
         await _userManager.SetLockoutEndDateAsync(target, null);
 
@@ -174,7 +174,7 @@ public class AdminService : IAdminService
     public async Task<UserDetailDto> GetUserDetailAsync(string targetUserId)
     {
         var user = await _userManager.FindByIdAsync(targetUserId)
-            ?? throw new NotFoundException(_localizer.Get("İstifaditaplmad"));
+            ?? throw new NotFoundException(_localizer.Get("UserNotFound"));
 
         var roles = await _userManager.GetRolesAsync(user);
 

@@ -67,5 +67,19 @@ public static class DbSeeder
             await context.UtilityProviders.AddRangeAsync(providers);
             await context.SaveChangesAsync();
         }
+
+        // standart komissiya qaydasi 
+        if (!await context.CommissionRules.AnyAsync())
+        {
+            context.CommissionRules.Add(new CommissionRule
+            {
+                TransactionType = "Transfer",
+                MinAmount = 2000,        // 2000 AZN-den yuxari
+                Percentage = 0.005m,     // 0.5% komissiya
+                MaxCommission = 50,      // maksimum 50 AZN
+                IsActive = true
+            });
+            await context.SaveChangesAsync();
+        }
     }
 }

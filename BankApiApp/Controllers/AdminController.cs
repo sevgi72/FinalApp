@@ -1,4 +1,5 @@
 using BankApiApp.DTOs.Admin;
+using BankApiApp.DTOs.Commission;
 using BankApiApp.DTOs.Common;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +14,12 @@ namespace BankApiApp.Controllers;
 public class AdminController : ControllerBase
 {
     private readonly IAdminService _adminService;
+    private readonly ICommissionService _commissionService;
 
-    public AdminController(IAdminService adminService)
+    public AdminController(IAdminService adminService, ICommissionService commissionService)
     {
         _adminService = adminService;
+        _commissionService = commissionService;
     }
 
     // istifadeci siyahisi (axtaris + blok filtri)
@@ -85,4 +88,16 @@ public class AdminController : ControllerBase
     [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> UnfreezeAccount(Guid accountId)
         => Ok(new { message = await _adminService.UnfreezeAccountAsync(accountId) });
+
+    // komissiya qaydalari (admin gorur)
+    [HttpGet("commission-rules")]
+    [Authorize(Roles = "SuperAdmin,Admin")]
+    public async Task<IActionResult> GetCommissionRules()
+        => Ok(await _commissionService.GetRulesAsync());
+
+    // komissiya qaydasi yenile (yalniz SuperAdmin)
+    [HttpPut("commission-rules/{id}")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> UpdateCommissionRule(Guid id, UpdateCommissionRuleDto dto)
+        => Ok(new { message = await _commissionService.UpdateRuleAsync(id, dto) });
 }
