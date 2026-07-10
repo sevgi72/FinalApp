@@ -10,22 +10,25 @@ QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// CORS — kenar sehifeler (cat, frontend) backend-e qosula bilsen
+// ══════════════ CORS ══════════════
+// Frontend (Live Server, React) backend-e qosula bilsin.
+// SetIsOriginAllowed(_ => true) - her menbeye icaze (development ucun).
+// Deploy zamani WithOrigins("https://amorabank.az") ile evez edilmelidir.
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.SetIsOriginAllowed(_ => true)   // her menbeye icaze
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();             // SignalR ucun (token oturulur)
     });
 });
 
-// rate limiting — brute-force ve flood qarsisibu
+// ══════════════ RATE LIMITING ══════════════
+// brute-force ve flood qarsisi
 builder.Services.AddRateLimiter(options =>
 {
-    // limit asilanda 429 qaytar
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
     // qlobal limit: her IP ucun deqiqede 100 sorgu
@@ -48,7 +51,6 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1)
             }));
 
-    // 429 cavabina mesaj elave et
     options.OnRejected = async (context, cancellationToken) =>
     {
         context.HttpContext.Response.ContentType = "application/json";
@@ -58,62 +60,53 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
-// Health check — sistemin sagligini yoxlayir (DB daxil)
+// ══════════════ HEALTH CHECK ══════════════
 builder.Services.AddHealthChecks()
     .AddNpgSql(
         builder.Configuration.GetConnectionString("DefaultConnection")!,
         name: "postgresql",
         tags: new[] { "db" });
 
-// Butun servis qeydiyyatlari bir setirde
+// ══════════════ SERVISLER ══════════════
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddSignalR();
 
-// lokalizasiya — .resx fayllarini Resources qovlugundan oxu
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
-
-// desteklenen diller + default
-builder.Services.Configure<RequestLocalizationOptions>(options =>
-{
-    var cultures = new[] { "az", "en", "ru" };
-    options.SetDefaultCulture("az");
-    options.AddSupportedCultures(cultures);
-    options.AddSupportedUICultures(cultures);
-});
+// QEYD: lokalizasiya JSON esasli oz servisimizle isleyir (ILocalizationService).
+// Kohne .resx qeydiyyatlari (AddLocalization / UseRequestLocalization) silindi.
 
 var app = builder.Build();
 
+// ══════════════ PIPELINE ══════════════
+// Sira vacibdir: Exception → Swagger → CORS → RateLimiter → Auth
+
 app.UseMiddleware<ExceptionMiddleware>();
 
-// Rollari ve admin istifadecisini seed et
+// Rollari, admin/superadmin ve komissiya qaydalarini seed et
 using (var scope = app.Services.CreateScope())
 {
     await DbSeeder.SeedAsync(scope.ServiceProvider);
 }
 
-// Middleware
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// CORS authentication-dan EVVEL olmalidir (preflight sorgular ucun)
 app.UseCors("AllowAll");
 
 // rate limiter — authentication-dan evvel islemelidir
 app.UseRateLimiter();
 
-// istifadecinin Accept-Language header-ine gore dili teyin et
-var locOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<RequestLocalizationOptions>>();
-app.UseRequestLocalization(locOptions.Value);
+app.UseAuthentication();   // token-i oxuyur, istifadecini taniyir
+app.UseAuthorization();    // rolu yoxlayir
 
-app.UseAuthentication(); // Tokeni oxuyur ve istifadecini taniyir
-app.UseAuthorization();  // Istifadecinin rolunu yoxlayir
-
-// 2. Sonra ise paneller ve endpoint-ler gelmelidir
+// ══════════════ HANGFIRE ══════════════
+// dashboard rate limit-den azad (Trigger now basanda 429 olmasin)
 app.UseHangfireDashboard("/hangfire");
 
-// Tekrarlanan isler (Hangfire)
+// Tekrarlanan isler
 RecurringJob.AddOrUpdate<ILoanService>(
     "process-loan-payments",
     service => service.ProcessDuePaymentsAsync(),
@@ -138,9 +131,10 @@ RecurringJob.AddOrUpdate<IDepositService>(
     "accrue-deposit-interest",
     service => service.AccrueInterestAsync(),
     Cron.Monthly);
-// 3. En sonda Hub-lar, Controller-ler ve Health Check-ler xeritelenmelidir
 
-// /health — sistemin veziyyeti (JSON cavab qaytarir ve Rate Limiting-den azaddir)
+// ══════════════ ENDPOINT-LER ══════════════
+
+// /health — rate limit-den azaddir (monitorinq tez-tez cagirir)
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     ResponseWriter = async (context, report) =>
@@ -149,7 +143,7 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
 
         var result = System.Text.Json.JsonSerializer.Serialize(new
         {
-            status = report.Status.ToString(),                  // Healthy / Degraded / Unhealthy
+            status = report.Status.ToString(),
             totalDuration = report.TotalDuration.TotalMilliseconds + " ms",
             checks = report.Entries.Select(e => new
             {
@@ -162,8 +156,11 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
         await context.Response.WriteAsync(result);
     }
 }).DisableRateLimiting();
-app.MapHub<BankApiApp.Hubs.NotificationHub>("/notificationHub");
-app.MapHub<BankApiApp.Hubs.ChatHub>("/chatHub");
+
+// SignalR hub-lari rate limit-den azad (canli baglanti limiti yemesin)
+app.MapHub<BankApiApp.Hubs.NotificationHub>("/notificationHub").DisableRateLimiting();
+app.MapHub<BankApiApp.Hubs.ChatHub>("/chatHub").DisableRateLimiting();
+
 app.MapControllers();
 
 app.Run();
