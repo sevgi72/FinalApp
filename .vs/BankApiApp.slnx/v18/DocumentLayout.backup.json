@@ -3,6 +3,14 @@
   "WorkspaceRootPath": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\services\\emailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\services\\emailservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{F0469428-0543-4212-B929-B9853E0E1373}|BankAppTest\\BankAppTest.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapptest\\commissionservicetests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{F0469428-0543-4212-B929-B9853E0E1373}|BankAppTest\\BankAppTest.csproj|solutionrelative:bankapptest\\commissionservicetests.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
@@ -14,20 +22,44 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "EmailService.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\EmailService.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Services\\EmailService.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\EmailService.cs",
+              "RelativeToolTip": "BankApiApp\\Services\\EmailService.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAIwCkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-11T20:14:52.489Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "BankApiApp\\appsettings.Development.json",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\appsettings.Development.json",
+              "RelativeToolTip": "BankApiApp\\appsettings.Development.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-07-11T20:13:54.275Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "CommissionServiceTests.cs",
               "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankAppTest\\CommissionServiceTests.cs",
               "RelativeDocumentMoniker": "BankAppTest\\CommissionServiceTests.cs",
               "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankAppTest\\CommissionServiceTests.cs",
               "RelativeToolTip": "BankAppTest\\CommissionServiceTests.cs",
-              "ViewState": "AgIAADsAAAAAAAAAAAAgwAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAADsAAAAAAAAAAAAgwE8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-11T19:42:04.685Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-07-11T19:42:04.685Z"
             }
           ]
         }
