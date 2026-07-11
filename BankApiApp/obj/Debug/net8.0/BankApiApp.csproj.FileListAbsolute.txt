@@ -192,4 +192,3 @@ C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Microsoft.Ex
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Microsoft.Extensions.Diagnostics.HealthChecks.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll
 C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\bin\Debug\net8.0\Microsoft.Extensions.Hosting.Abstractions.dll
-C:\Users\PC\OneDrive\Desktop\BankApiApp\BankApiApp\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

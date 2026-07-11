@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="BankApiApp/BankApiApp.csproj" />
+  <Project Path="BankAppTest/BankAppTest.csproj" Id="f0469428-0543-4212-b929-b9853e0e1373" />
 </Solution>

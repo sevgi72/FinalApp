@@ -28,13 +28,15 @@ public class AuthService : IAuthService
         IConfiguration config,
         AppDbContext context,
         IAuditService auditService,
-        IEmailService emailService)
+        IEmailService emailService,
+        ILocalizationService localizer)   // ← YENI parametr
     {
         _userManager = userManager;
         _config = config;
         _context = context;
         _auditService = auditService;
         _emailService = emailService;
+        _localizer = localizer;           // ← YENI setir
     }
 
     public async Task<string> RegisterAsync(RegisterDto dto)
