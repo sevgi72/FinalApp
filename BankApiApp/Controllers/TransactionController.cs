@@ -1,6 +1,7 @@
 using BankApiApp.DTOs.Common;
 using BankApiApp.DTOs.Transaction;
 using BankApiApp.DTOs.Transactions;
+using BankApiApp.Helpers;
 using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -46,7 +47,15 @@ public class TransactionController : ControllerBase
         Guid accountId, [FromQuery] PaginationParams pagination)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        return Ok(await _transactionService.GetAccountTransactionsAsync(userId, accountId, pagination));
+        var result = await _transactionService.GetAccountTransactionsAsync(userId, accountId, pagination);
+
+        // Accept-Language-e gore emeliyyat tesvirlerini tercume et (Yol B).
+        // Taninan sabit tesvirler tercume olunur, serbest metnler (Kirayə haqqı) qalir.
+        var lang = CategoryLocalizer.Normalize(Request.Headers["Accept-Language"].ToString());
+        foreach (var item in result.Items)
+            item.Description = CategoryLocalizer.LocalizeDescription(item.Description, lang);
+
+        return Ok(result);
     }
 
     [HttpPost("transfer-by-card")]
@@ -61,7 +70,13 @@ public class TransactionController : ControllerBase
     public async Task<IActionResult> GetReceipt(Guid id)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        return Ok(await _transactionService.GetReceiptAsync(userId, id));
+        var receipt = await _transactionService.GetReceiptAsync(userId, id);
+
+        // qebzdeki tesviri de tercume et
+        var lang = CategoryLocalizer.Normalize(Request.Headers["Accept-Language"].ToString());
+        receipt.Description = CategoryLocalizer.LocalizeDescription(receipt.Description, lang);
+
+        return Ok(receipt);
     }
 
     [HttpGet("{id}/receipt/pdf")]

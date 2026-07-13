@@ -1,4 +1,5 @@
-﻿using BankApiApp.Services;
+﻿using BankApiApp.Helpers;
+using BankApiApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -39,7 +40,15 @@ public class AnalyticsController : ControllerBase
     public async Task<IActionResult> GetSpending([FromQuery] int? year, [FromQuery] int? month)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        return Ok(await _analyticsService.GetSpendingByCategoryAsync(userId, year, month));
+        var report = await _analyticsService.GetSpendingByCategoryAsync(userId, year, month);
+
+        // Accept-Language basligina gore kateqoriya adlarini tercume et (Yol B).
+        // DB-ye toxunmuruq, yalniz cavabda tercume.
+        var lang = CategoryLocalizer.Normalize(Request.Headers["Accept-Language"].ToString());
+        foreach (var c in report.Categories)
+            c.Category = CategoryLocalizer.Localize(c.Category, lang);
+
+        return Ok(report);
     }
 
     // son N ayin xerc trendi
