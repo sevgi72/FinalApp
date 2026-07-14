@@ -10,4 +10,5 @@ public interface ICardService
     Task<CardDto> GetCardAsync(string userId, Guid cardId);
     Task BlockCardAsync(string userId, Guid cardId);
     Task UnblockCardAsync(string userId, Guid cardId);
+    Task<CardDto> UpdateSettingsAsync(string userId, Guid cardId, UpdateCardSettingsDto dto);
 }

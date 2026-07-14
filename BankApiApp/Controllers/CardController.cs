@@ -55,4 +55,11 @@ public class CardController : ControllerBase
         await _cardService.UnblockCardAsync(userId, id);
         return Ok(new { message = "Kart aktivlesdirildi." });
     }
+    // kart parametrlerini yenile (ad / limit / onlayn odenis)
+    [HttpPut("{id}/settings")]
+    public async Task<IActionResult> UpdateSettings(Guid id, UpdateCardSettingsDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _cardService.UpdateSettingsAsync(userId, id, dto));
+    }
 }

@@ -104,7 +104,31 @@ public class CardService : ICardService
         card.Status = CardStatus.Active;
         await _context.SaveChangesAsync();
     }
+    // kart parametrlerini yenile (ad / limit / onlayn odenis)
+    public async Task<CardDto> UpdateSettingsAsync(string userId, Guid cardId, UpdateCardSettingsDto dto)
+    {
+        var card = await LoadOwnedCardAsync(userId, cardId);
 
+        // yalniz gonderilen saheler deyisir (null olmayanlar)
+        if (dto.CardName != null)
+        {
+            var name = dto.CardName.Trim();
+            card.CardName = string.IsNullOrEmpty(name) ? null : name;
+        }
+
+        if (dto.MonthlyLimit.HasValue)
+        {
+            if (dto.MonthlyLimit.Value < 0)
+                throw new BadRequestException(_localizer.Get("AmountMustBePositive"));
+            card.MonthlyLimit = dto.MonthlyLimit.Value;
+        }
+
+        if (dto.OnlinePaymentsEnabled.HasValue)
+            card.OnlinePaymentsEnabled = dto.OnlinePaymentsEnabled.Value;
+
+        await _context.SaveChangesAsync();
+        return MapToDto(card);
+    }
     // --- komekci metodlar ---
 
     // sahiblik yoxlamasi ile karti yukle (zencir: Card → Account → OwnerId)
@@ -125,11 +149,20 @@ public class CardService : ICardService
     {
         Id = card.Id,
         MaskedNumber = Mask(card.CardNumber),
+        FullNumber = FormatFull(card.CardNumber),   // tam nomre (bosluqlu)
         CardHolderName = card.CardHolderName,
         Expiry = FormatExpiry(card),
         Status = card.Status.ToString(),
-        AccountId = card.AccountId
+        AccountId = card.AccountId,
+        CardName = card.CardName,
+        MonthlyLimit = card.MonthlyLimit,
+        OnlinePaymentsEnabled = card.OnlinePaymentsEnabled,
+        CreatedAt = card.CreatedAt
     };
+
+    // tam nomreni 4-lu qruplara ayir: "4111 1111 1111 1111"
+    private static string FormatFull(string cardNumber)
+        => System.Text.RegularExpressions.Regex.Replace(cardNumber, ".{4}", "$0 ").Trim();
 
     private static string FormatExpiry(Card card)
         => $"{card.ExpiryMonth:D2}/{card.ExpiryYear % 100:D2}";   // "06/30"

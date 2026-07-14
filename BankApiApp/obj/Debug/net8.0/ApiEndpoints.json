@@ -437,6 +437,22 @@
   },
   {
     "ContainingType": "BankApiApp.Controllers.AuthController",
+    "Method": "UpdateProfile",
+    "RelativePath": "api/Auth/profile",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.Auth.UpdateProfileDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.AuthController",
     "Method": "RefreshToken",
     "RelativePath": "api/Auth/refresh-token",
     "HttpMethod": "POST",
@@ -602,6 +618,27 @@
   },
   {
     "ContainingType": "BankApiApp.Controllers.CardController",
+    "Method": "UpdateSettings",
+    "RelativePath": "api/Card/{id}/settings",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.Card.UpdateCardSettingsDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.CardController",
     "Method": "Unblock",
     "RelativePath": "api/Card/{id}/unblock",
     "HttpMethod": "POST",
@@ -751,6 +788,42 @@
     "ContainingType": "BankApiApp.Controllers.ChatController",
     "Method": "GetMyMessages",
     "RelativePath": "api/Chat/my-messages",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.CurrencyController",
+    "Method": "Convert",
+    "RelativePath": "api/Currency/convert",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "from",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "to",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "amount",
+        "Type": "System.Decimal",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.CurrencyController",
+    "Method": "GetRates",
+    "RelativePath": "api/Currency/rates",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,

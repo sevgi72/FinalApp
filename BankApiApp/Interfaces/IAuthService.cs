@@ -21,4 +21,6 @@ public interface IAuthService
 
     // Google login 
     Task<AuthResponseDto> GoogleLoginAsync(GoogleLoginDto dto);
+    Task<ProfileDto> UpdateProfileAsync(string userId, UpdateProfileDto dto);
+
 }

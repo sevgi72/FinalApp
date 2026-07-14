@@ -249,6 +249,10 @@ namespace BankApiApp.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("CardName")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
                     b.Property<string>("CardNumber")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -262,6 +266,12 @@ namespace BankApiApp.Data.Migrations
 
                     b.Property<int>("ExpiryYear")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("MonthlyLimit")
+                        .HasColumnType("numeric");
+
+                    b.Property<bool>("OnlinePaymentsEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Status")
                         .IsRequired()

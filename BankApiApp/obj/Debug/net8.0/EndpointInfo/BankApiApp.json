@@ -880,6 +880,37 @@
         }
       }
     },
+    "/api/Auth/profile": {
+      "put": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/BalanceAlert/threshold": {
       "post": {
         "tags": [
@@ -1033,6 +1064,48 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Card/{id}/settings": {
+      "put": {
+        "tags": [
+          "Card"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCardSettingsDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCardSettingsDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCardSettingsDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -1216,6 +1289,54 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Currency/rates": {
+      "get": {
+        "tags": [
+          "Currency"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/Currency/convert": {
+      "get": {
+        "tags": [
+          "Currency"
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "amount",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
             }
           }
         ],
@@ -3108,6 +3229,25 @@
         },
         "additionalProperties": false
       },
+      "UpdateCardSettingsDto": {
+        "type": "object",
+        "properties": {
+          "cardName": {
+            "type": "string",
+            "nullable": true
+          },
+          "monthlyLimit": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "onlinePaymentsEnabled": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateCommissionRuleDto": {
         "type": "object",
         "properties": {
@@ -3149,6 +3289,26 @@
           "yearlyLimit": {
             "type": "number",
             "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateProfileDto": {
+        "required": [
+          "fullName"
+        ],
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "phoneNumber": {
+            "maxLength": 20,
+            "type": "string",
+            "format": "tel",
             "nullable": true
           }
         },

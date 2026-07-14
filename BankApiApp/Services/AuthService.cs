@@ -385,10 +385,40 @@ public class AuthService : IAuthService
             Id = user.Id,
             FullName = user.FullName,
             Email = user.Email!,
+            PhoneNumber = user.PhoneNumber,
+            IsTwoFactorEnabled = user.IsTwoFactorEnabled,
+            EmailConfirmed = user.EmailConfirmed,
             Roles = roles,
             AccountCount = accounts.Count,
-            TotalBalance = accounts.Sum(a => a.Balance)
+            TotalBalance = accounts.Sum(a => a.Balance),
+            CreatedAt = user.CreatedAt
         };
+    }
+
+    public async Task<ProfileDto> UpdateProfileAsync(string userId, UpdateProfileDto dto)
+    {
+        var user = await _userManager.FindByIdAsync(userId)
+            ?? throw new NotFoundException(_localizer.Get("UserNotFound"));
+
+        // ad
+        var name = dto.FullName?.Trim();
+        if (string.IsNullOrEmpty(name))
+            throw new BadRequestException(_localizer.Get("FullNameRequired"));
+        user.FullName = name;
+
+        // telefon (opsional)
+        var phone = dto.PhoneNumber?.Trim();
+        user.PhoneNumber = string.IsNullOrEmpty(phone) ? null : phone;
+
+        user.UpdatedAt = DateTime.UtcNow;
+
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            throw new BadRequestException(string.Join("; ", result.Errors.Select(e => e.Description)));
+
+        await _auditService.LogManualAsync("ProfileUpdated", "Profil yenilendi.", user.Id, user.Email);
+
+        return await GetProfileAsync(userId);
     }
 
     // --- komekci metodlar ---

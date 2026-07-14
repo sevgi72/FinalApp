@@ -96,4 +96,13 @@ public class AuthController : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         return Ok(await _authService.GetProfileAsync(userId));
     }
+
+
+    [HttpPut("profile")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProfile(UpdateProfileDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _authService.UpdateProfileAsync(userId, dto));
+    }
 }
