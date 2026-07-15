@@ -94,4 +94,20 @@ public class TransactionController : ControllerBase
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         return Ok(await _transactionService.SelfTransferAsync(userId, dto));
     }
+
+    // Hesab cixarisi (F5) — secilmis tarix araligi
+    [HttpGet("account/{accountId}/statement")]
+    public async Task<IActionResult> GetStatement(
+        Guid accountId, [FromQuery] DateTime from, [FromQuery] DateTime to)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var statement = await _transactionService.GetStatementAsync(userId, accountId, from, to);
+
+        // tesvirleri de tercume et (Yol B)
+        var lang = CategoryLocalizer.Normalize(Request.Headers["Accept-Language"].ToString());
+        foreach (var item in statement.Items)
+            item.Description = CategoryLocalizer.LocalizeDescription(item.Description, lang);
+
+        return Ok(statement);
+    }
 }

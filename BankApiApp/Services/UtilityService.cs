@@ -14,14 +14,20 @@ public class UtilityService : IUtilityService
     private readonly AppDbContext _context;
     private readonly ILimitService _limitService;
     private readonly IRoundUpService _roundUpService;
-    private readonly ICashbackService _cashbackService;   
-    public UtilityService(AppDbContext context, ILimitService limitService, IRoundUpService roundUpService, ILocalizationService localizer, ICashbackService cashbackService)
+    private readonly ICashbackService _cashbackService;
+    private readonly IBalanceAlertService _balanceAlertService;   
+
+    public UtilityService(AppDbContext context, ILimitService limitService,
+        IRoundUpService roundUpService, ILocalizationService localizer,
+        ICashbackService cashbackService,
+        IBalanceAlertService balanceAlertService) 
     {
         _localizer = localizer;
         _context = context;
         _limitService = limitService;
         _roundUpService = roundUpService;
         _cashbackService = cashbackService;
+        _balanceAlertService = balanceAlertService;   
     }
 
     public async Task<List<UtilityProviderDto>> GetProvidersAsync()
@@ -73,6 +79,8 @@ public class UtilityService : IUtilityService
 
         await _limitService.EnsureWithinLimitsAsync(account, dto.Amount);
 
+        var balanceBefore = account.Balance;   // azalmadan evvelki balans
+
         await using var trx = await _context.Database.BeginTransactionAsync();
         try
         {
@@ -94,16 +102,19 @@ public class UtilityService : IUtilityService
                 Type = TransactionType.Withdraw,
                 Status = TransactionStatus.Completed,
                 FromAccountId = account.Id,
+                FromBalanceSnapshot = account.Balance,   // odenisden sonraki balans (F4)
                 Description = $"Kommunal odenis: {provider.Name} ({dto.SubscriberCode})"
             });
 
             await _context.SaveChangesAsync();
-
             await trx.CommitAsync();
+
+            // low-balance yoxlamasi (commit-den sonra) — F7
+            await _balanceAlertService.CheckAndAlertAsync(account, balanceBefore);
 
             await _roundUpService.TryProcessAsync(account, dto.Amount);
 
-            await _cashbackService.TryEarnAsync(userId, dto.Amount, "Kommunal"); 
+            await _cashbackService.TryEarnAsync(userId, dto.Amount, "Kommunal");
 
             return new UtilityPaymentDto
             {

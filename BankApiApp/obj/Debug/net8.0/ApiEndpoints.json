@@ -1435,6 +1435,32 @@
   },
   {
     "ContainingType": "BankApiApp.Controllers.TransactionController",
+    "Method": "GetStatement",
+    "RelativePath": "api/Transaction/account/{accountId}/statement",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "accountId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "from",
+        "Type": "System.DateTime",
+        "IsRequired": false
+      },
+      {
+        "Name": "to",
+        "Type": "System.DateTime",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.TransactionController",
     "Method": "Deposit",
     "RelativePath": "api/Transaction/deposit",
     "HttpMethod": "POST",

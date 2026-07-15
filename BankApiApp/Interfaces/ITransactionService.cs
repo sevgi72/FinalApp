@@ -15,4 +15,5 @@ public interface ITransactionService
     Task<ReceiptDto> GetReceiptAsync(string userId, Guid transactionId);
     Task<(byte[] Pdf, string FileName)> GetReceiptPdfAsync(string userId, Guid transactionId);
     Task<TransactionDto> SelfTransferAsync(string userId, SelfTransferDto dto);
+    Task<StatementDto> GetStatementAsync(string userId, Guid accountId, DateTime from, DateTime to);
 }

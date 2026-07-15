@@ -449,4 +449,69 @@ public class TransactionService : ITransactionService
 
         return _mapper.Map<TransactionDto>(transaction);
     }
+    // Hesab cixarisi — secilmis tarix araligi ucun (F5)
+    public async Task<StatementDto> GetStatementAsync(
+        string userId, Guid accountId, DateTime from, DateTime to)
+    {
+        // hesab istifadeciye aiddir?
+        var account = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == accountId && a.OwnerId == userId)
+            ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
+
+        // "to" gununun sonuna qeder (23:59:59)
+        // PostgreSQL yalniz UTC qebul edir — tarixleri UTC olaraq isarele
+        var fromStart = DateTime.SpecifyKind(from.Date, DateTimeKind.Utc);
+        var toEnd = DateTime.SpecifyKind(to.Date.AddDays(1).AddTicks(-1), DateTimeKind.Utc);
+
+        // tarix araligindaki emeliyyatlar (kohnneden yeniye — cixaris sirasi)
+        var txns = await _context.Transactions
+            .Where(t => (t.FromAccountId == accountId || t.ToAccountId == accountId)
+                        && t.CreatedAt >= fromStart && t.CreatedAt <= toEnd)
+            .OrderBy(t => t.CreatedAt)
+            .ToListAsync();
+
+        var items = new List<StatementItemDto>();
+        decimal totalIn = 0, totalOut = 0;
+
+        foreach (var t in txns)
+        {
+            bool incoming = t.ToAccountId == accountId;
+            var balanceAfter = incoming ? t.ToBalanceSnapshot : t.FromBalanceSnapshot;
+
+            if (incoming) totalIn += t.Amount;
+            else totalOut += t.Amount;
+
+            items.Add(new StatementItemDto
+            {
+                Date = t.CreatedAt,
+                Type = t.Type.ToString(),
+                Description = t.Description,
+                Amount = t.Amount,
+                IsIncoming = incoming,
+                BalanceAfter = balanceAfter
+            });
+        }
+
+        // baslangic balans: ilk emeliyyatdan onceki (ilk emeliyyatin snapshot-i - onun tesiri)
+        // son balans: sonuncu emeliyyatin snapshot-i (yoxdursa hesabin cari balansi)
+        decimal closing = account.Balance;
+        if (items.Count > 0 && items[^1].BalanceAfter.HasValue)
+            closing = items[^1].BalanceAfter.Value;
+
+        // baslangic = son balans - (giris - cixis)  [araliqdaki xalis deyisme geri cixilir]
+        decimal opening = closing - (totalIn - totalOut);
+
+        return new StatementDto
+        {
+            AccountNumber = account.AccountNumber,
+            From = fromStart,
+            To = toEnd,
+            OpeningBalance = opening,
+            ClosingBalance = closing,
+            TotalIn = totalIn,
+            TotalOut = totalOut,
+            Count = items.Count,
+            Items = items
+        };
+    }
 }

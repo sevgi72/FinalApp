@@ -1,12 +1,270 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\dtos\\auth\\googlelogindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\dtos\\auth\\googlelogindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\services\\utilityservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\services\\utilityservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\services\\balancealertservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\services\\balancealertservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\interfaces\\ibalancealertservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\interfaces\\ibalancealertservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\controllers\\balancealertcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\controllers\\balancealertcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\services\\transactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\services\\transactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\controllers\\transactioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\controllers\\transactioncontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\interfaces\\itransactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\interfaces\\itransactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\dtos\\transactions\\statementdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\dtos\\transactions\\statementdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\dtos\\transactions\\transactiondto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\dtos\\transactions\\transactiondto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|c:\\users\\pc\\onedrive\\desktop\\bankapiapp\\bankapiapp\\models\\transaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D336F50D-3310-E6CD-09CD-699AF2E9660D}|BankApiApp\\BankApiApp.csproj|solutionrelative:bankapiapp\\models\\transaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 4,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Program.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Program.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Program.cs",
+              "RelativeToolTip": "BankApiApp\\Program.cs",
+              "ViewState": "AgIAAIoAAAAAAAAAAAAowJ0AAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-15T18:08:36.926Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Controllers\\AuthController.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "BankApiApp\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAAFMAAAAAAAAAAAAYwGMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-15T18:08:21.604Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "AuthService.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\AuthService.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Services\\AuthService.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\AuthService.cs",
+              "RelativeToolTip": "BankApiApp\\Services\\AuthService.cs",
+              "ViewState": "AgIAANEBAAAAAAAAAAAgwOABAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-15T18:07:48.204Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "GoogleLoginDto.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\DTOs\\Auth\\GoogleLoginDto.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\DTOs\\Auth\\GoogleLoginDto.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\DTOs\\Auth\\GoogleLoginDto.cs",
+              "RelativeToolTip": "BankApiApp\\DTOs\\Auth\\GoogleLoginDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-15T18:07:32.516Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "BankApiApp\\appsettings.Development.json",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\appsettings.Development.json",
+              "RelativeToolTip": "BankApiApp\\appsettings.Development.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-07-15T17:26:14.224Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "UtilityService.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\UtilityService.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Services\\UtilityService.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\UtilityService.cs",
+              "RelativeToolTip": "BankApiApp\\Services\\UtilityService.cs",
+              "ViewState": "AgIAAKMAAAAAAAAAAAAowMAAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-15T09:28:24.894Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "BalanceAlertService.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\BalanceAlertService.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Services\\BalanceAlertService.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\BalanceAlertService.cs",
+              "RelativeToolTip": "BankApiApp\\Services\\BalanceAlertService.cs",
+              "ViewState": "AgIAACkAAAAAAAAAAAAwwDUAAAA3AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-15T09:23:00.915Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "IBalanceAlertService.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Interfaces\\IBalanceAlertService.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Interfaces\\IBalanceAlertService.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Interfaces\\IBalanceAlertService.cs",
+              "RelativeToolTip": "BankApiApp\\Interfaces\\IBalanceAlertService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-15T09:22:59.006Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "BalanceAlertController.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Controllers\\BalanceAlertController.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Controllers\\BalanceAlertController.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Controllers\\BalanceAlertController.cs",
+              "RelativeToolTip": "BankApiApp\\Controllers\\BalanceAlertController.cs",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAowAwAAAAzAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-15T08:01:09.101Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "StatementDto.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\DTOs\\Transactions\\StatementDto.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\DTOs\\Transactions\\StatementDto.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\DTOs\\Transactions\\StatementDto.cs",
+              "RelativeToolTip": "BankApiApp\\DTOs\\Transactions\\StatementDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T20:03:07.334Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "TransactionDto.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\DTOs\\Transactions\\TransactionDto.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\DTOs\\Transactions\\TransactionDto.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\DTOs\\Transactions\\TransactionDto.cs",
+              "RelativeToolTip": "BankApiApp\\DTOs\\Transactions\\TransactionDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T20:01:49.553Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "TransactionService.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\TransactionService.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Services\\TransactionService.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Services\\TransactionService.cs",
+              "RelativeToolTip": "BankApiApp\\Services\\TransactionService.cs",
+              "ViewState": "AgIAAOMBAAAAAAAAAAAiwPoBAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T20:01:35.955Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "Transaction.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Models\\Transaction.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Models\\Transaction.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Models\\Transaction.cs",
+              "RelativeToolTip": "BankApiApp\\Models\\Transaction.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAQwBoAAABfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T20:01:22.017Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ITransactionService.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Interfaces\\ITransactionService.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Interfaces\\ITransactionService.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Interfaces\\ITransactionService.cs",
+              "RelativeToolTip": "BankApiApp\\Interfaces\\ITransactionService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAABkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T19:57:47.316Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "TransactionController.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Controllers\\TransactionController.cs",
+              "RelativeDocumentMoniker": "BankApiApp\\Controllers\\TransactionController.cs",
+              "ToolTip": "C:\\Users\\PC\\OneDrive\\Desktop\\BankApiApp\\BankApiApp\\Controllers\\TransactionController.cs",
+              "RelativeToolTip": "BankApiApp\\Controllers\\TransactionController.cs",
+              "ViewState": "AgIAAFkAAAAAAAAAAAAwwGoAAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-14T19:45:27.646Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
