@@ -1,0 +1,10 @@
+# Sirrler
+**/appsettings.json
+**/appsettings.Development.json
+
+# Build
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/

@@ -127,6 +127,9 @@ public class AuthService : IAuthService
         }
 
         var valid = await _userManager.CheckPasswordAsync(user, dto.Password);
+        // Google ile yaradilmis hesabin parolu yoxdur — aydin mesaj verek
+        if (!valid && !string.IsNullOrEmpty(user.GoogleId) && user.PasswordHash == null)
+            throw new BadRequestException("Bu hesab Google ile yaradilib. 'Google ile davam et' duymesini isledin.");
         // bloklanmis istifadeci daxil ola bilmez
         if (await _userManager.IsLockedOutAsync(user))
         {
