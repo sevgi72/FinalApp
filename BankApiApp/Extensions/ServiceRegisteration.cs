@@ -186,6 +186,7 @@ public static class ServiceRegistration
         services.AddScoped<IBalanceAlertService, BalanceAlertService>();
         services.AddScoped<ICommissionService, CommissionService>();
         services.AddScoped<ICurrencyService, CurrencyService>();
+        services.AddHttpClient<IAiService, AiService>();
         return services;
     }
 

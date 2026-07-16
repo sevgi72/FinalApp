@@ -9,4 +9,5 @@ public interface ISavingsGoalService
     Task<SavingsGoalDto> ContributeAsync(string userId, Guid goalId, ContributeGoalDto dto);
     Task<string> WithdrawAsync(string userId, Guid goalId, ContributeGoalDto dto);
     Task<string> DeleteAsync(string userId, Guid goalId);
+    Task<SavingsGoalDto> UpdateAsync(string userId, Guid goalId, UpdateSavingsGoalDto dto);
 }

@@ -34,6 +34,16 @@ public class SavingsGoalController : ControllerBase
         return Ok(await _service.GetMyAsync(userId));
     }
 
+
+    // meqsedi redakte et
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(Guid id, UpdateSavingsGoalDto dto)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        return Ok(await _service.UpdateAsync(userId, id, dto));
+    }
+
+
     // meqsede pul elave et
     [HttpPost("{id}/contribute")]
     public async Task<IActionResult> Contribute(Guid id, ContributeGoalDto dto)

@@ -241,6 +241,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "BankApiApp.Controllers.AiController",
+    "Method": "Ask",
+    "RelativePath": "api/Ai/ask",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.Ai.AskAiDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BankApiApp.Controllers.AnalyticsController",
     "Method": "GetDashboard",
     "RelativePath": "api/Analytics/dashboard",
@@ -1197,6 +1213,27 @@
       {
         "Name": "dto",
         "Type": "BankApiApp.DTOs.SavingsGoal.CreateSavingsGoalDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BankApiApp.Controllers.SavingsGoalController",
+    "Method": "Update",
+    "RelativePath": "api/SavingsGoal/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "BankApiApp.DTOs.SavingsGoal.UpdateSavingsGoalDto",
         "IsRequired": true
       }
     ],

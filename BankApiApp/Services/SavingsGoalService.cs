@@ -56,7 +56,72 @@ public class SavingsGoalService : ISavingsGoalService
 
         return goals.Select(MapToDto).ToList();
     }
+    // meqsedi redakte et (ad, hedef mebleg, son tarix)
+    // Eger yeni hedef toplanan meblegden AZDIRSA, artiq qalan hisse
+    // menbe hesaba geri qaytarilir.
+    public async Task<SavingsGoalDto> UpdateAsync(string userId, Guid goalId, UpdateSavingsGoalDto dto)
+    {
+        var goal = await _context.SavingsGoals
+            .FirstOrDefaultAsync(g => g.Id == goalId && g.UserId == userId)
+            ?? throw new NotFoundException("Meqsed tapilmadi.");
 
+        var name = dto.Name?.Trim();
+        if (string.IsNullOrEmpty(name))
+            throw new BadRequestException("Meqsedin adi bos ola bilmez.");
+
+        if (dto.TargetAmount <= 0)
+            throw new BadRequestException("Hedef mebleg musbet olmalidir.");
+
+        await using var trx = await _context.Database.BeginTransactionAsync();
+
+        // yeni hedef toplanandan azdirsa — artiq qalani hesaba qaytar
+        decimal refund = 0;
+        if (dto.TargetAmount < goal.CurrentAmount)
+        {
+            refund = goal.CurrentAmount - dto.TargetAmount;
+
+            var account = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.Id == goal.SourceAccountId)
+                ?? throw new NotFoundException(_localizer.Get("AccountNotFound"));
+
+            account.Balance += refund;
+            goal.CurrentAmount = dto.TargetAmount;   // meqsed tam dolu olur
+
+            _context.Transactions.Add(new Transaction
+            {
+                Amount = refund,
+                Type = TransactionType.Deposit,
+                Status = TransactionStatus.Completed,
+                ToAccountId = account.Id,
+                ToBalanceSnapshot = account.Balance,   // F4 — emeliyyatdan sonraki balans
+                Description = $"Meqsed hedefi azaldildi, artiq mebleg qaytarildi: {goal.Name}"
+            });
+        }
+
+        goal.Name = name;
+        goal.TargetAmount = dto.TargetAmount;
+        goal.Deadline = dto.Deadline.HasValue
+            ? DateTime.SpecifyKind(dto.Deadline.Value, DateTimeKind.Utc)
+            : null;
+
+        // hedefe catibsa tamamlanmis, yoxsa aktiv
+        goal.IsCompleted = goal.CurrentAmount >= goal.TargetAmount;
+        goal.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        await trx.CommitAsync();
+
+        // artiq mebleg qaytarilibsa istifadecini xeberdar et
+        if (refund > 0)
+        {
+            await _notificationService.SendToUserAsync(userId,
+                "Meqsed yenilendi",
+                $"'{goal.Name}' meqsedinin hedefi azaldildi. Artiq qalan {refund:0.00} AZN hesabiniza qaytarildi.",
+                "System");
+        }
+
+        return MapToDto(goal);
+    }
     // meqsede pul elave et (esas hesabdan cixir)
     public async Task<SavingsGoalDto> ContributeAsync(string userId, Guid goalId, ContributeGoalDto dto)
     {
