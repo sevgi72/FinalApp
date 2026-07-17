@@ -11,7 +11,7 @@ public class AiService : IAiService
     private readonly IConfiguration _config;
 
     // Model adi — Google modelleri yenileyende burani deyisin kifayetdir
-    private const string Model = "gemini-2.0-flash-lite";
+    private const string Model = "gemini-flash-latest";
     private const string BaseUrl = "https://generativelanguage.googleapis.com/v1beta/models/";
 
     public AiService(HttpClient http, IConfiguration config)
@@ -62,7 +62,13 @@ Investisiya mesleheti verme.";
                 parts = new[] { new { text = question } }
             }
         },
-            generationConfig = new { maxOutputTokens = 600 }
+            // thinkingBudget = 0 → model "dusunmeye" token xercleməsin.
+            // Sade bank suallari ucun lazim deyil, hem sürətli, hem kvotaya qenaetdir.
+            generationConfig = new
+            {
+                maxOutputTokens = 600,
+                thinkingConfig = new { thinkingBudget = 0 }
+            }
         };
 
         var json = JsonSerializer.Serialize(payload);

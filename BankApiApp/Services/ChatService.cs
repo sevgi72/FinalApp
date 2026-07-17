@@ -13,12 +13,17 @@ public class ChatService : IChatService
         _context = context;
     }
 
-    // istifadəçi öz söhbətini görür (həm göndərdiyi, həm aldığı mesajlar)
-    public async Task<List<ChatMessageDto>> GetMyMessagesAsync(string userId)
+    // istifadeci OZ sohbetini gorur (hem gonderdiyi, hem aldigi mesajlar).
+    // days — son nece gunun mesajlari gosterilsin (default 7, max 30).
+    public async Task<List<ChatMessageDto>> GetMyMessagesAsync(string userId, int days = 7)
     {
+        // deyeri mehdudlasdiririq: cox boyuk sorgu ve suiistifade olmasin
+        days = Math.Clamp(days, 1, 30);
+        var since = DateTime.UtcNow.AddDays(-days);
+
         var messages = await _context.ChatMessages
-            .Where(m => m.SenderId == userId || m.ReceiverId == userId)
-            .OrderBy(m => m.SentAt)   // köhnədən yeniyə (söhbət ardıcıllığı)
+            .Where(m => (m.SenderId == userId || m.ReceiverId == userId) && m.SentAt >= since)
+            .OrderBy(m => m.SentAt)   // kohneden yeniye (sohbet ardicilligi)
             .ToListAsync();
 
         return messages.Select(MapToDto).ToList();

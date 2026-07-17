@@ -21,7 +21,7 @@ public class AiController : ControllerBase
 
     // AI komekciye sual ver
     [HttpPost("ask")]
-    [EnableRateLimiting("auth")]   // deqiqede 5 sorgu — kvota qorunsun
+    [EnableRateLimiting("auth")]   // ← "auth" deyil, "ai" 
     public async Task<IActionResult> Ask(AskAiDto dto)
     {
         var lang = CategoryLocalizer.Normalize(Request.Headers["Accept-Language"].ToString());

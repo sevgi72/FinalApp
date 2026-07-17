@@ -51,6 +51,7 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromMinutes(1)
             }));
 
+
     options.OnRejected = async (context, cancellationToken) =>
     {
         context.HttpContext.Response.ContentType = "application/json";
@@ -69,7 +70,13 @@ builder.Services.AddHealthChecks()
 
 // ══════════════ SERVISLER ══════════════
 builder.Services.AddApplicationServices(builder.Configuration);
-builder.Services.AddSignalR();
+// Baglanti qirilmasini daha tez askarlamaq ucun (default: 30 san / 15 san).
+// Presence-in "onlayn qalib qalmasi" probleminin qarsisini alir.
+builder.Services.AddSignalR(options =>
+{
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(12);
+    options.KeepAliveInterval = TimeSpan.FromSeconds(5);
+});
 
 // QEYD: lokalizasiya JSON esasli oz servisimizle isleyir (ILocalizationService).
 // Kohne .resx qeydiyyatlari (AddLocalization / UseRequestLocalization) silindi.

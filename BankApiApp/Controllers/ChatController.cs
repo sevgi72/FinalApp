@@ -7,7 +7,7 @@ namespace BankApiApp.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "SuperAdmin,Admin")]
+[Authorize]   // ← rol telebi silindi: her metod ozu teyin edir
 public class ChatController : ControllerBase
 {
     private readonly IChatService _chatService;
@@ -17,21 +17,25 @@ public class ChatController : ControllerBase
         _chatService = chatService;
     }
 
-    // istifadəçi öz söhbətini görür
+    // istifadeci OZ sohbetini gorur (rol telebi yoxdur)
+    // userId token-den goturulur — bashqasinin yazismasini oxumaq mumkun deyil
+    // istifadeci OZ sohbetini gorur (rol telebi yoxdur).
+    // userId token-den goturulur — bashqasinin yazismasini oxumaq mumkun deyil.
+    // days: son nece gun (default 7, max 30)
     [HttpGet("my-messages")]
-    public async Task<IActionResult> GetMyMessages()
+    public async Task<IActionResult> GetMyMessages([FromQuery] int days = 7)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        return Ok(await _chatService.GetMyMessagesAsync(userId));
+        return Ok(await _chatService.GetMyMessagesAsync(userId, days));
     }
 
-    // admin bütün söhbətlərin siyahısını görür
+    // admin butun sohbetlerin siyahisini gorur
     [HttpGet("conversations")]
     [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> GetConversations()
         => Ok(await _chatService.GetConversationsAsync());
 
-    // admin konkret istifadəçi ilə söhbəti görür
+    // admin konkret istifadeci ile sohbeti gorur
     [HttpGet("conversation/{userId}")]
     [Authorize(Roles = "SuperAdmin,Admin")]
     public async Task<IActionResult> GetConversation(string userId)

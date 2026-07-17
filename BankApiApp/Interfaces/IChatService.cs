@@ -5,7 +5,7 @@ namespace BankApiApp.Services;
 public interface IChatService
 {
     // istifadəçi öz söhbətini görür
-    Task<List<ChatMessageDto>> GetMyMessagesAsync(string userId);
+    Task<List<ChatMessageDto>> GetMyMessagesAsync(string userId, int days = 7);
 
     // admin konkret istifadəçi ilə söhbəti görür
     Task<List<ChatMessageDto>> GetConversationAsync(string userId);
