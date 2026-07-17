@@ -182,15 +182,15 @@
           "dependencies": {
             "FluentAssertions": {
               "target": "Package",
-              "version": "[8.10.0, )"
+              "version": "[6.12.1, )"
             },
             "Microsoft.EntityFrameworkCore.InMemory": {
               "target": "Package",
-              "version": "[8.0.11, )"
+              "version": "[8.0.10, )"
             },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
-              "version": "[17.8.0, )"
+              "version": "[17.11.1, )"
             },
             "Moq": {
               "target": "Package",
@@ -198,15 +198,15 @@
             },
             "coverlet.collector": {
               "target": "Package",
-              "version": "[6.0.0, )"
+              "version": "[6.0.2, )"
             },
             "xunit": {
               "target": "Package",
-              "version": "[2.5.3, )"
+              "version": "[2.9.2, )"
             },
             "xunit.runner.visualstudio": {
               "target": "Package",
-              "version": "[2.5.3, )"
+              "version": "[2.8.2, )"
             }
           },
           "imports": [
