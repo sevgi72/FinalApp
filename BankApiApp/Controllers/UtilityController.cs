@@ -19,10 +19,22 @@ public class UtilityController : ControllerBase
         _utilityService = utilityService;
     }
 
-    // butun provayderler
+    // aktiv provayderler (adi istifadeci ucun)
     [HttpGet("providers")]
     public async Task<IActionResult> GetProviders()
         => Ok(await _utilityService.GetProvidersAsync());
+
+    // BUTUN provayderler (admin panel ucun — aktiv + deaktiv)
+    [HttpGet("providers/all")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> GetAllProviders()
+        => Ok(await _utilityService.GetAllProvidersAsync());
+
+    // yeni provayder yarat (yalniz SuperAdmin)
+    [HttpPost("providers")]
+    [Authorize(Roles = "SuperAdmin")]
+    public async Task<IActionResult> CreateProvider(CreateProviderDto dto)
+        => Ok(await _utilityService.CreateProviderAsync(dto));
 
     // borc sorgusu
     [HttpPost("debt")]

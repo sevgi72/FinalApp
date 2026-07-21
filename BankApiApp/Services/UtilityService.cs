@@ -34,8 +34,7 @@ public class UtilityService : IUtilityService
 
     public async Task<List<UtilityProviderDto>> GetProvidersAsync()
     {
-        // DUZELIS 5: yalniz oxuyuruq, deyisdirmirik -> AsNoTracking
-        // EF Core bu obyektleri izlemesin (RAM qenaeti + suret).
+        // yalniz oxuyuruq -> AsNoTracking (RAM qenaeti + suret)
         return await _context.UtilityProviders
             .AsNoTracking()
             .Where(p => p.IsActive)
@@ -47,6 +46,55 @@ public class UtilityService : IUtilityService
                 Category = p.Category.ToString()
             })
             .ToListAsync();
+    }
+
+    // admin ucun — HAMISI (aktiv + deaktiv), idaretme panelinde gorunsun
+    public async Task<List<UtilityProviderDto>> GetAllProvidersAsync()
+    {
+        return await _context.UtilityProviders
+            .AsNoTracking()
+            .OrderBy(p => p.Category)
+            .Select(p => new UtilityProviderDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Category = p.Category.ToString(),
+                IsActive = p.IsActive
+            })
+            .ToListAsync();
+    }
+
+    // yeni kommunal provayder yarat (SuperAdmin)
+    public async Task<UtilityProviderDto> CreateProviderAsync(CreateProviderDto dto)
+    {
+        // ad bos ola bilmez
+        if (string.IsNullOrWhiteSpace(dto.Name))
+            throw new BadRequestException("Provayder adi bos ola bilmez.");
+
+        // eyni adli provayder onsuz var? (tekrari qarsisi)
+        var name = dto.Name.Trim();
+        var exists = await _context.UtilityProviders
+            .AnyAsync(p => p.Name.ToLower() == name.ToLower());
+        if (exists)
+            throw new BadRequestException("Bu adda provayder onsuz movcuddur.");
+
+        var provider = new UtilityProvider
+        {
+            Name = name,
+            Category = dto.Category,
+            IsActive = true
+        };
+
+        _context.UtilityProviders.Add(provider);
+        await _context.SaveChangesAsync();
+
+        return new UtilityProviderDto
+        {
+            Id = provider.Id,
+            Name = provider.Name,
+            Category = provider.Category.ToString(),
+            IsActive = provider.IsActive
+        };
     }
 
     public async Task<DebtResponseDto> GetDebtAsync(DebtInquiryDto dto)
@@ -111,22 +159,15 @@ public class UtilityService : IUtilityService
                 Description = $"Kommunal odenis: {provider.Name} ({dto.SubscriberCode})"
             });
 
-            // DUZELIS 3 (Secim B): Round-up balansi deyisdiyi ucun
-            // transaction DAXILINDE cagirilir. TryProcessAsync oz SaveChanges-ini
-            // etmir -- deyisiklikler asagidaki SaveChanges ile BIRLIKDE saxlanir.
-            // Beleliklede odenis + round-up atomikdir: ya hamisi, ya hec biri.
+            // Round-up balansi deyisdiyi ucun transaction DAXILINDE cagirilir.
+            // Oz SaveChanges-ini etmir -- asagidaki SaveChanges ile BIRLIKDE.
             await _roundUpService.TryProcessAsync(account, dto.Amount);
 
             await _context.SaveChangesAsync();
             await trx.CommitAsync();
 
-            // Commit-den SONRA -- esas emeliyyata tesir etmeyen "side-effect"-ler:
-
-            // Cashback bonusdur, oz SaveChanges-i var (best-effort). Qesden esas
-            // odenisden AYRIdir ki, kesbek xetasi odenisi poza bilmesin.
+            // Commit-den SONRA -- esas emeliyyata tesir etmeyen side-effect-ler:
             await _cashbackService.TryEarnAsync(userId, account.Id, dto.Amount, "Kommunal");
-
-            // BalanceAlert sadece bildirisdir -- commit-den sonra gonderilir.
             await _balanceAlertService.CheckAndAlertAsync(account, balanceBefore);
 
             return new UtilityPaymentDto
@@ -204,9 +245,7 @@ public class UtilityService : IUtilityService
         return (pdf, fileName);
     }
 
-    // DUZELIS 2: GetHashCode() .NET-de her restart-da ferqli reqem verir ->
-    // eyni abunechi kodu ucun borc her server restart-da deyiserdi.
-    // SHA256 deterministikdir -- eyni giris hemise eyni neticeni verir.
+    // GetHashCode() her restart-da ferqli reqem verir -> SHA256 deterministikdir.
     private static decimal CalculateDebt(string subscriberCode)
     {
         var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(subscriberCode));
