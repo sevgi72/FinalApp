@@ -36,23 +36,32 @@ public class StatementService : IStatementService
             throw new BadRequestException("Baslangic tarixi son tarixden boyuk ola bilmez.");
 
         // bu hesaba aid butun emeliyyatlar (tarixe gore)
-        var allTx = await _context.Transactions
+        // 1. Prior olan balansı birbaşa Database (PostgreSQL) tərəfində toplayırıq
+        var incomingBefore = await _context.Transactions
+            .AsNoTracking()
+            .Where(t => t.ToAccountId == account.Id
+                     && t.Status == TransactionStatus.Completed
+                     && t.CreatedAt < from)
+            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+        var outgoingBefore = await _context.Transactions
+            .AsNoTracking()
+            .Where(t => t.FromAccountId == account.Id
+                     && t.Status == TransactionStatus.Completed
+                     && t.CreatedAt < from)
+            .SumAsync(t => (decimal?)t.Amount) ?? 0m;
+
+        decimal openingBalance = incomingBefore - outgoingBefore;
+
+        // 2. Bazadan YALNIZ lazım olan tarix aralığını çəkirik
+        var periodTx = await _context.Transactions
+            .AsNoTracking()
             .Where(t => (t.FromAccountId == account.Id || t.ToAccountId == account.Id)
-                     && t.Status == TransactionStatus.Completed)
+                     && t.Status == TransactionStatus.Completed
+                     && t.CreatedAt >= from
+                     && t.CreatedAt <= to)
             .OrderBy(t => t.CreatedAt)
             .ToListAsync();
-
-        // acilis balansi = cari balans - dovrden sonraki emeliyyatlarin tesiri
-        // sade usul: dovrden EVVELki emeliyyatlarin cemini hesabla
-        decimal openingBalance = 0;
-        foreach (var t in allTx.Where(t => t.CreatedAt < from))
-        {
-            if (t.ToAccountId == account.Id) openingBalance += t.Amount;    // daxil olan
-            if (t.FromAccountId == account.Id) openingBalance -= t.Amount;  // cixan
-        }
-
-        // dovr icindeki emeliyyatlar
-        var periodTx = allTx.Where(t => t.CreatedAt >= from && t.CreatedAt <= to).ToList();
 
         var lines = new List<StatementLineDto>();
         decimal totalIn = 0, totalOut = 0;
@@ -97,7 +106,7 @@ public class StatementService : IStatementService
     public async Task<byte[]> GeneratePdfAsync(string userId, StatementRequestDto dto)
     {
         var s = await GenerateAsync(userId, dto);
-        QuestPDF.Settings.License = LicenseType.Community;
+        //QuestPDF.Settings.License = LicenseType.Community;
 
         // reng palitrasi
         string primary = "#1B3A5B";    // tund mavi (bank rengi)

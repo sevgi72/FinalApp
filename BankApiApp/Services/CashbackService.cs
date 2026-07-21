@@ -34,7 +34,9 @@ public class CashbackService : ICashbackService
     };
 
     // emeliyyatdan sonra kesbek hesabla (hec vaxt exception atmir)
-    public async Task TryEarnAsync(string userId, decimal spentAmount, string category)
+    // DUZELIS: artiq accountId de qebul edir — kesbek qeydi hansi hesaba
+    // aid oldugunu bilsin (yoxsa status hesablamasi butun istifadecilerinkini qaristirir).
+    public async Task TryEarnAsync(string userId, Guid accountId, decimal spentAmount, string category)
     {
         try
         {
@@ -50,12 +52,14 @@ public class CashbackService : ICashbackService
             user.CashbackBalance += cashback;
             await _userManager.UpdateAsync(user);
 
-            // kesbek qeydi (statistika ucun transaction kimi - sadece izleme)
+            // kesbek qeydi — ToAccountId ile hesaba baglanir ki,
+            // status hesablamasi yalniz bu istifadecinin kesbekini toplasin.
             _context.Transactions.Add(new Transaction
             {
                 Amount = cashback,
                 Type = TransactionType.Deposit,
                 Status = TransactionStatus.Completed,
+                ToAccountId = accountId,          // ← DUZELIS: hesaba baglandi
                 Description = CashbackDescription
             });
             await _context.SaveChangesAsync();
@@ -74,8 +78,18 @@ public class CashbackService : ICashbackService
         var monthStart = DateTime.SpecifyKind(
             new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1), DateTimeKind.Utc);
 
+        // DUZELIS: yalniz BU istifadecinin hesablarina dusen kesbeki topla.
+        // Evvel userId filtri yox idi → butun bankin kesbekini goserirdi.
+        var myAccountIds = await _context.Accounts
+            .Where(a => a.OwnerId == userId)
+            .Select(a => a.Id)
+            .ToListAsync();
+
         var earnedThisMonth = await _context.Transactions
-            .Where(t => t.Description == CashbackDescription && t.CreatedAt >= monthStart)
+            .Where(t => t.Description == CashbackDescription
+                        && t.CreatedAt >= monthStart
+                        && t.ToAccountId != null
+                        && myAccountIds.Contains(t.ToAccountId.Value))
             .SumAsync(t => (decimal?)t.Amount) ?? 0m;
 
         return new CashbackStatusDto

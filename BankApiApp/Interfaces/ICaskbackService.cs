@@ -5,7 +5,8 @@ namespace BankApiApp.Services;
 public interface ICashbackService
 {
     // emeliyyatdan sonra cagirilir - kesbek hesablayir ve elave edir
-    Task TryEarnAsync(string userId, decimal spentAmount, string category);
+    // accountId: kesbek hansi hesaba aiddir (status hesablamasi ucun lazimdir)
+    Task TryEarnAsync(string userId, Guid accountId, decimal spentAmount, string category);
 
     Task<CashbackStatusDto> GetStatusAsync(string userId);
 

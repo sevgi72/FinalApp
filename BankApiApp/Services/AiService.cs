@@ -10,8 +10,8 @@ public class AiService : IAiService
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
 
-    // Model adi — Google modelleri yenileyende burani deyisin kifayetdir
-    private const string Model = "gemini-flash-latest";
+    // DÜZƏLİŞ 1: Düzgün rəsmi model adı
+    private const string Model = "gemini-2.5-flash";
     private const string BaseUrl = "https://generativelanguage.googleapis.com/v1beta/models/";
 
     public AiService(HttpClient http, IConfiguration config)
@@ -20,7 +20,6 @@ public class AiService : IAiService
         _config = config;
     }
 
-    // Modele "kim oldugunu" izah edir — cavablar bank movzusunda qalir
     private static string BuildSystemPrompt(string lang) => $@"
 Sen Amorabank onlayn bank tetbiqinin komekcisisen.
 Tetbiqde: hesablar, cixaris (PDF), kocurmeler (IBAN/kart), kartlar (limit/blok),
@@ -47,7 +46,7 @@ Investisiya mesleheti verme.";
         if (string.IsNullOrEmpty(question))
             throw new BadRequestException("Sual bos ola bilmez.");
 
-        // Gemini sorgu govdesi
+        // DÜZƏLİŞ 2: thinkingConfig silindi (standart modellərdə 400 xətası verir)
         var payload = new
         {
             system_instruction = new
@@ -56,18 +55,15 @@ Investisiya mesleheti verme.";
             },
             contents = new[]
             {
-            new
-            {
-                role = "user",
-                parts = new[] { new { text = question } }
-            }
-        },
-            // thinkingBudget = 0 → model "dusunmeye" token xercleməsin.
-            // Sade bank suallari ucun lazim deyil, hem sürətli, hem kvotaya qenaetdir.
+                new
+                {
+                    role = "user",
+                    parts = new[] { new { text = question } }
+                }
+            },
             generationConfig = new
             {
-                maxOutputTokens = 600,
-                thinkingConfig = new { thinkingBudget = 0 }
+                maxOutputTokens = 600
             }
         };
 
@@ -76,7 +72,6 @@ Investisiya mesleheti verme.";
         HttpResponseMessage response = null!;
         string body = "";
 
-        // 503 (model yuklu) ve ya 429 halinda 3 defe cehd et — qisa gozleme ile
         for (int attempt = 1; attempt <= 3; attempt++)
         {
             using var req = new HttpRequestMessage(
@@ -95,18 +90,13 @@ Investisiya mesleheti verme.";
 
             body = await response.Content.ReadAsStringAsync();
 
-            // Ugurlu cavab aldiqsa, donguden cix
             if (response.IsSuccessStatusCode) break;
 
-            // Model yuklu olanda (503) 3 defe cehd edirik.
-            // 429 (kvota) halinda tekrar cehd VEZIYYETI PISLESDIRIR — derhal dayaniriq.
             if ((int)response.StatusCode != 503 || attempt == 3) break;
 
-            // Cehd sayina gore gozleme muddeti: 1-ci cehdde 800ms, 2-ci cehdde 1600ms gozleyir
             await Task.Delay(800 * attempt);
         }
 
-        // Əgər butun cehdlerden sonra da cavab ugurlu deyilse
         if (!response.IsSuccessStatusCode)
         {
             var code = (int)response.StatusCode;
@@ -114,10 +104,11 @@ Investisiya mesleheti verme.";
                 throw new BadRequestException("AI limiti doldu. 1 deqiqe gozleyib yeniden cehd edin.");
             if (code == 503)
                 throw new BadRequestException("AI komekci hazirda cox yuklüdür. Bir azdan cehd edin.");
+
+            // Xətanın dəqiq nə olduğunu konsolda/response-da görmək üçün body-dən də istifadə edə bilərsən
             throw new BadRequestException($"AI xidmeti xeta qaytardi ({code}).");
         }
 
-        // Cavabi cixar: candidates[0].content.parts[0].text
         try
         {
             using var doc = JsonDocument.Parse(body);
@@ -134,7 +125,6 @@ Investisiya mesleheti verme.";
         }
         catch
         {
-            // Model cavabi blok edibse ve ya format gozlenilmezdirse
             throw new BadRequestException("AI cavab vere bilmedi. Sualinizi basqa cur yazin.");
         }
     }

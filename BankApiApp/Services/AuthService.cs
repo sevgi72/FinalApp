@@ -29,14 +29,14 @@ public class AuthService : IAuthService
         AppDbContext context,
         IAuditService auditService,
         IEmailService emailService,
-        ILocalizationService localizer)   // ← YENI parametr
+        ILocalizationService localizer)   
     {
         _userManager = userManager;
         _config = config;
         _context = context;
         _auditService = auditService;
         _emailService = emailService;
-        _localizer = localizer;           // ← YENI setir
+        _localizer = localizer;           
     }
 
     public async Task<string> RegisterAsync(RegisterDto dto)
@@ -127,7 +127,7 @@ public class AuthService : IAuthService
         }
 
         var valid = await _userManager.CheckPasswordAsync(user, dto.Password);
-        // Google ile yaradilmis hesabin parolu yoxdur — aydin mesaj verek
+        // Google ile yaradilmis hesabin parolu yoxdur , aydin mesaj verek
         if (!valid && !string.IsNullOrEmpty(user.GoogleId) && user.PasswordHash == null)
             throw new BadRequestException("Bu hesab Google ile yaradilib. 'Google ile davam et' duymesini isledin.");
         // bloklanmis istifadeci daxil ola bilmez
@@ -211,7 +211,7 @@ public class AuthService : IAuthService
             : "Iki merheleli dogrulama sonduruldu.";
     }
 
-    // --- GOOGLE LOGIN (yeni) ---
+    
 
     public async Task<AuthResponseDto> GoogleLoginAsync(GoogleLoginDto dto)
     {
@@ -240,17 +240,17 @@ public class AuthService : IAuthService
 
         if (user == null)
         {
-            // YOXDUR → yeni yarat (parolsuz, email tesdiqli — Google onsuz tesdiqleyib)
+            // YOXDU  yeni yarat (parolsuz, email tesdiqli — Google onsuz tesdiqleyib)
             user = new ApplicationUser
             {
                 FullName = fullName,
                 Email = email,
                 UserName = email,
-                EmailConfirmed = true,      // Google emaili tesdiqleyib
+                EmailConfirmed = true,      
                 GoogleId = googleId
             };
 
-            var result = await _userManager.CreateAsync(user);   // parol YOX
+            var result = await _userManager.CreateAsync(user);   // parol no
             if (!result.Succeeded)
                 throw new BadRequestException(string.Join("; ", result.Errors.Select(e => e.Description)));
 
@@ -259,7 +259,7 @@ public class AuthService : IAuthService
         }
         else
         {
-            // VAR → movcud hesaba Google-u bagla (eger hele bagli deyilse)
+            // VAR  movcud hesaba Google-u bagla (eger hele bagli deyilse)
             if (string.IsNullOrEmpty(user.GoogleId))
             {
                 user.GoogleId = googleId;
@@ -270,7 +270,7 @@ public class AuthService : IAuthService
 
         await _auditService.LogManualAsync("GoogleLogin", "Google ile giris.", user.Id, user.Email);
 
-        // 4. Bizim oz JWT token-imizi ver
+        // 4. Bizim oz JWT tokenimizi ver
         return await BuildAuthResponseAsync(user);
     }
 
@@ -409,7 +409,7 @@ public class AuthService : IAuthService
             throw new BadRequestException(_localizer.Get("FullNameRequired"));
         user.FullName = name;
 
-        // telefon (opsional)
+        // telefon 
         var phone = dto.PhoneNumber?.Trim();
         user.PhoneNumber = string.IsNullOrEmpty(phone) ? null : phone;
 
@@ -424,7 +424,7 @@ public class AuthService : IAuthService
         return await GetProfileAsync(userId);
     }
 
-    // --- komekci metodlar ---
+    // additional metoflarimiz
 
     private async Task<AuthResponseDto> BuildAuthResponseAsync(ApplicationUser user)
     {

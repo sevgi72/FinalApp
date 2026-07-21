@@ -21,8 +21,8 @@ public static class ReceiptPdfGenerator
                 // basliq
                 page.Header().Column(col =>
                 {
-                    col.Item().Text("BankApiApp").FontSize(22).Bold().FontColor(Colors.Blue.Darken2);
-                    col.Item().Text("Emeliyyat Qebzi").FontSize(13).FontColor(Colors.Grey.Medium);
+                    col.Item().Text("AmoraBank").FontSize(22).Bold().FontColor(Colors.Blue.Darken2);
+                    col.Item().Text("Əməliyyat Qəbzi").FontSize(13).FontColor(Colors.Grey.Medium);
                     col.Item().PaddingTop(8).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                 });
 
@@ -43,10 +43,10 @@ public static class ReceiptPdfGenerator
                     // detal setirleri
                     Row(col, "Referans:", r.Reference);
                     Row(col, "Tarix:", r.Date.ToString("dd.MM.yyyy HH:mm"));
-                    Row(col, "Emeliyyat novu:", r.Type);
-                    if (!string.IsNullOrEmpty(r.FromAccount)) Row(col, "Gonderen:", r.FromAccount!);
+                    Row(col, "Əməliyyat növü:", r.Type);
+                    if (!string.IsNullOrEmpty(r.FromAccount)) Row(col, "Göndərən:", r.FromAccount!);
                     if (!string.IsNullOrEmpty(r.ToAccount)) Row(col, "Alan:", r.ToAccount!);
-                    if (!string.IsNullOrEmpty(r.Description)) Row(col, "Tesvir:", r.Description!);
+                    if (!string.IsNullOrEmpty(r.Description)) Row(col, "Təsvir:", r.Description!);
                 });
 
                 // alt qeyd
@@ -54,10 +54,10 @@ public static class ReceiptPdfGenerator
                 {
                     col.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                     col.Item().PaddingTop(8).AlignCenter()
-                        .Text("Bu, elektron qebzdir ve imza teleb etmir.")
+                        .Text("Bu, elektron qəbzdir və imza tələb etmir.")
                         .FontSize(9).FontColor(Colors.Grey.Medium);
                     col.Item().AlignCenter()
-                        .Text($"Yaradilma: {DateTime.UtcNow:dd.MM.yyyy HH:mm} UTC")
+                        .Text($"Yaradılma: {DateTime.UtcNow:dd.MM.yyyy HH:mm} UTC")
                         .FontSize(9).FontColor(Colors.Grey.Medium);
                 });
             });

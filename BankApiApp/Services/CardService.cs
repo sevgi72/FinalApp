@@ -45,7 +45,7 @@ public class CardService : ICardService
             CardNumber = cardNumber,
             CardHolderName = account.Owner.FullName.ToUpper(),
             ExpiryMonth = now.Month,
-            ExpiryYear = now.Year + 4,         // 4 il etibarli
+            ExpiryYear = now.Year + 4,        
             Status = CardStatus.Active,
             AccountId = account.Id
         };
@@ -53,7 +53,6 @@ public class CardService : ICardService
         _context.Cards.Add(card);
         await _context.SaveChangesAsync();
 
-        // tam nomre + CVV YALNIZ bu cavabda — sonra hec vaxt
         return new CardCreatedDto
         {
             Id = card.Id,
@@ -104,7 +103,7 @@ public class CardService : ICardService
         card.Status = CardStatus.Active;
         await _context.SaveChangesAsync();
     }
-    // kart parametrlerini yenile (ad / limit / onlayn odenis)
+    // kart parametrlerini yenile (ad , limit , onlayn odenis)
     public async Task<CardDto> UpdateSettingsAsync(string userId, Guid cardId, UpdateCardSettingsDto dto)
     {
         var card = await LoadOwnedCardAsync(userId, cardId);
@@ -129,9 +128,7 @@ public class CardService : ICardService
         await _context.SaveChangesAsync();
         return MapToDto(card);
     }
-    // --- komekci metodlar ---
-
-    // sahiblik yoxlamasi ile karti yukle (zencir: Card → Account → OwnerId)
+    
     private async Task<Card> LoadOwnedCardAsync(string userId, Guid cardId)
     {
         var card = await _context.Cards
@@ -149,7 +146,7 @@ public class CardService : ICardService
     {
         Id = card.Id,
         MaskedNumber = Mask(card.CardNumber),
-        FullNumber = FormatFull(card.CardNumber),   // tam nomre (bosluqlu)
+        FullNumber = FormatFull(card.CardNumber),  
         CardHolderName = card.CardHolderName,
         Expiry = FormatExpiry(card),
         Status = card.Status.ToString(),
@@ -165,30 +162,30 @@ public class CardService : ICardService
         => System.Text.RegularExpressions.Regex.Replace(cardNumber, ".{4}", "$0 ").Trim();
 
     private static string FormatExpiry(Card card)
-        => $"{card.ExpiryMonth:D2}/{card.ExpiryYear % 100:D2}";   // "06/30"
+        => $"{card.ExpiryMonth:D2}/{card.ExpiryYear % 100:D2}";   
 
     private static string Mask(string cardNumber)
-        => "**** **** **** " + cardNumber[^4..];   // son 4 reqem
+        => "**** **** **** " + cardNumber[^4..];   // son 4 reqemi gosterir
 
-    // "4" ile baslayan, Luhn-a uygun 16 reqemli nomre
+   
     private static string GenerateCardNumber()
     {
         var digits = new char[16];
-        digits[0] = '4';                                   // Visa-benzer prefiks
+        digits[0] = '4';                                  
         for (int i = 1; i < 15; i++)
             digits[i] = (char)('0' + Random.Shared.Next(0, 10));
 
         var first15 = new string(digits, 0, 15);
-        digits[15] = (char)('0' + LuhnCheckDigit(first15)); // 16-ci = yoxlama reqemi
+        digits[15] = (char)('0' + LuhnCheckDigit(first15)); 
 
         return new string(digits);
     }
 
-    // Luhn yoxlama reqemini hesabla
+   
     private static int LuhnCheckDigit(string number)
     {
         int sum = 0;
-        bool doubleIt = true;   // sagdan ikiqatlama
+        bool doubleIt = true;  
         for (int i = number.Length - 1; i >= 0; i--)
         {
             int d = number[i] - '0';
@@ -204,5 +201,5 @@ public class CardService : ICardService
     }
 
     private static string GenerateCvv()
-        => Random.Shared.Next(100, 1000).ToString();   // 3 reqem
+        => Random.Shared.Next(100, 1000).ToString();  
 }

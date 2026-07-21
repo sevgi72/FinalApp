@@ -5,6 +5,8 @@ using BankApiApp.Exceptions;
 using BankApiApp.Extensions;
 using BankApiApp.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace BankApiApp.Services;
 
@@ -15,39 +17,42 @@ public class UtilityService : IUtilityService
     private readonly ILimitService _limitService;
     private readonly IRoundUpService _roundUpService;
     private readonly ICashbackService _cashbackService;
-    private readonly IBalanceAlertService _balanceAlertService;   
+    private readonly IBalanceAlertService _balanceAlertService;
 
     public UtilityService(AppDbContext context, ILimitService limitService,
         IRoundUpService roundUpService, ILocalizationService localizer,
         ICashbackService cashbackService,
-        IBalanceAlertService balanceAlertService) 
+        IBalanceAlertService balanceAlertService)
     {
         _localizer = localizer;
         _context = context;
         _limitService = limitService;
         _roundUpService = roundUpService;
         _cashbackService = cashbackService;
-        _balanceAlertService = balanceAlertService;   
+        _balanceAlertService = balanceAlertService;
     }
 
     public async Task<List<UtilityProviderDto>> GetProvidersAsync()
     {
-        var providers = await _context.UtilityProviders
+        // DUZELIS 5: yalniz oxuyuruq, deyisdirmirik -> AsNoTracking
+        // EF Core bu obyektleri izlemesin (RAM qenaeti + suret).
+        return await _context.UtilityProviders
+            .AsNoTracking()
             .Where(p => p.IsActive)
             .OrderBy(p => p.Category)
+            .Select(p => new UtilityProviderDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Category = p.Category.ToString()
+            })
             .ToListAsync();
-
-        return providers.Select(p => new UtilityProviderDto
-        {
-            Id = p.Id,
-            Name = p.Name,
-            Category = p.Category.ToString()
-        }).ToList();
     }
 
     public async Task<DebtResponseDto> GetDebtAsync(DebtInquiryDto dto)
     {
         var provider = await _context.UtilityProviders
+            .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == dto.ProviderId && p.IsActive)
             ?? throw new NotFoundException(_localizer.Get("ProviderNotFound"));
 
@@ -102,19 +107,27 @@ public class UtilityService : IUtilityService
                 Type = TransactionType.Withdraw,
                 Status = TransactionStatus.Completed,
                 FromAccountId = account.Id,
-                FromBalanceSnapshot = account.Balance,   // odenisden sonraki balans (F4)
+                FromBalanceSnapshot = account.Balance,   // odenisden sonraki balans
                 Description = $"Kommunal odenis: {provider.Name} ({dto.SubscriberCode})"
             });
+
+            // DUZELIS 3 (Secim B): Round-up balansi deyisdiyi ucun
+            // transaction DAXILINDE cagirilir. TryProcessAsync oz SaveChanges-ini
+            // etmir -- deyisiklikler asagidaki SaveChanges ile BIRLIKDE saxlanir.
+            // Beleliklede odenis + round-up atomikdir: ya hamisi, ya hec biri.
+            await _roundUpService.TryProcessAsync(account, dto.Amount);
 
             await _context.SaveChangesAsync();
             await trx.CommitAsync();
 
-            // low-balance yoxlamasi (commit-den sonra) — F7
+            // Commit-den SONRA -- esas emeliyyata tesir etmeyen "side-effect"-ler:
+
+            // Cashback bonusdur, oz SaveChanges-i var (best-effort). Qesden esas
+            // odenisden AYRIdir ki, kesbek xetasi odenisi poza bilmesin.
+            await _cashbackService.TryEarnAsync(userId, account.Id, dto.Amount, "Kommunal");
+
+            // BalanceAlert sadece bildirisdir -- commit-den sonra gonderilir.
             await _balanceAlertService.CheckAndAlertAsync(account, balanceBefore);
-
-            await _roundUpService.TryProcessAsync(account, dto.Amount);
-
-            await _cashbackService.TryEarnAsync(userId, dto.Amount, "Kommunal");
 
             return new UtilityPaymentDto
             {
@@ -137,11 +150,13 @@ public class UtilityService : IUtilityService
     public async Task<PagedResult<UtilityPaymentDto>> GetMyPaymentsAsync(string userId, PaginationParams pagination)
     {
         var myAccountIds = await _context.Accounts
+            .AsNoTracking()
             .Where(a => a.OwnerId == userId)
             .Select(a => a.Id)
             .ToListAsync();
 
         var query = _context.UtilityPayments
+            .AsNoTracking()
             .Include(p => p.Provider)
             .Where(p => myAccountIds.Contains(p.AccountId))
             .OrderByDescending(p => p.CreatedAt);
@@ -170,11 +185,13 @@ public class UtilityService : IUtilityService
     public async Task<(byte[] Pdf, string FileName)> GetReceiptPdfAsync(string userId, Guid paymentId)
     {
         var myAccountIds = await _context.Accounts
+            .AsNoTracking()
             .Where(a => a.OwnerId == userId)
             .Select(a => a.Id)
             .ToListAsync();
 
         var payment = await _context.UtilityPayments
+            .AsNoTracking()
             .Include(p => p.Provider)
             .FirstOrDefaultAsync(p => p.Id == paymentId)
             ?? throw new NotFoundException(_localizer.Get("PaymentNotFound"));
@@ -187,12 +204,16 @@ public class UtilityService : IUtilityService
         return (pdf, fileName);
     }
 
+    // DUZELIS 2: GetHashCode() .NET-de her restart-da ferqli reqem verir ->
+    // eyni abunechi kodu ucun borc her server restart-da deyiserdi.
+    // SHA256 deterministikdir -- eyni giris hemise eyni neticeni verir.
     private static decimal CalculateDebt(string subscriberCode)
     {
-        int hash = Math.Abs(subscriberCode.GetHashCode());
-        decimal debt = (hash % 20000) / 100m;
-        return debt;
+        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(subscriberCode));
+        int hash = BitConverter.ToInt32(hashBytes, 0);
+        return Math.Abs(hash % 20000) / 100m;
     }
+
     // provayderi aktiv/deaktiv et (SuperAdmin)
     public async Task<string> ToggleProviderAsync(Guid providerId, bool isActive)
     {

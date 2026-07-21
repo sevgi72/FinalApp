@@ -14,7 +14,7 @@ public class LoanService : ILoanService
     private readonly ILocalizationService _localizer;
     private readonly AppDbContext _context;
     private readonly IMapper _mapper;
-    private const decimal AnnualInterestRate = 12m;  // bankin illik faizi (%)
+    private const decimal AnnualInterestRate = 12m; // Bankın illik faizi (%)
 
     public LoanService(AppDbContext context, IMapper mapper, ILocalizationService localizer)
     {
@@ -35,9 +35,8 @@ public class LoanService : ILoanService
         if (account == null)
             throw new NotFoundException(_localizer.Get("AccountNotFound"));
 
-        // AMORTIZASIYA: ayliq odenis ve umumi meblegi hesabla
-        var (monthlyPayment, totalPayable) =
-            CalculateAmortization(dto.Principal, AnnualInterestRate, dto.TermMonths);
+        // AMORTİZASİYA: Aylıq ödəniş və ümumi məbləğ
+        var (monthlyPayment, totalPayable) = CalculateAmortization(dto.Principal, AnnualInterestRate, dto.TermMonths);
 
         var loan = new Loan
         {
@@ -48,7 +47,7 @@ public class LoanService : ILoanService
             MonthlyPayment = monthlyPayment,
             TotalPayable = totalPayable,
             RemainingBalance = totalPayable,
-            Status = LoanStatus.Pending      // hele admin tesdiqi gozleyir
+            Status = LoanStatus.Pending // Əvvəlcə admin təsdiqi gözləyir
         };
 
         _context.Loans.Add(loan);
@@ -57,23 +56,23 @@ public class LoanService : ILoanService
         return _mapper.Map<LoanDto>(loan);
     }
 
-    // Amortizasiya hesablamasi
+    // Amortizasiya hesablaması (Dəqiq Maliyyə Hesablanması)
     private (decimal monthlyPayment, decimal totalPayable) CalculateAmortization(
         decimal principal, decimal annualRate, int termMonths)
     {
-        var rate = annualRate / 100m;          // 12% → 0.12
-        var years = termMonths / 12m;          // 12 ay → 1 il
-        var interest = principal * rate * years; // faiz meblegi
-        var total = principal + interest;       // esas + faiz
-        var monthly = Math.Round(total / termMonths, 2); // ayliq odenis
-        total = monthly * termMonths;           // yuvarlaqlasdirmadan sonra tutarli saxla
+        var rate = annualRate / 100m;
+        var years = termMonths / 12m;
+        var interest = principal * rate * years;
+        var total = Math.Round(principal + interest, 2, MidpointRounding.AwayFromZero);
+        var monthly = Math.Round(total / termMonths, 2, MidpointRounding.AwayFromZero);
+        
         return (monthly, total);
     }
 
-    public async Task<PagedResult<LoanDto>> GetMyLoansAsync(
-    string userId, PaginationParams pagination)
+    public async Task<PagedResult<LoanDto>> GetMyLoansAsync(string userId, PaginationParams pagination)
     {
         var query = _context.Loans
+            .AsNoTracking() // ⚡ Məhsuldarlıq üçün AsNoTracking
             .Include(l => l.Payments)
             .Where(l => l.Account.OwnerId == userId)
             .OrderByDescending(l => l.CreatedAt);
@@ -93,6 +92,7 @@ public class LoanService : ILoanService
     public async Task<PagedResult<LoanDto>> GetPendingLoansAsync(PaginationParams pagination)
     {
         var query = _context.Loans
+            .AsNoTracking() // ⚡ Məhsuldarlıq üçün AsNoTracking
             .Include(l => l.Payments)
             .Where(l => l.Status == LoanStatus.Pending)
             .OrderBy(l => l.CreatedAt);
@@ -126,26 +126,40 @@ public class LoanService : ILoanService
             loan.Status = LoanStatus.Active;
             loan.StartDate = DateTime.UtcNow;
 
-            // 1. krediti hesaba kocur (istifadeci pulu alir)
+            // 1. Krediti hesaba köçür (Məbləğ istifadəçi balansına oturur)
             loan.Account.Balance += loan.Principal;
+            
             _context.Transactions.Add(new Transaction
             {
                 Amount = loan.Principal,
                 Type = TransactionType.Deposit,
                 Status = TransactionStatus.Completed,
                 ToAccountId = loan.AccountId,
-                Description = "Kredit verildi"
+                Description = $"Kredit təsdiqləndi: {loan.Principal:N2} AZN"
             });
 
-            // 2. odenis cedvelini yarat (TermMonths setir)
+            // 2. Ödəniş cədvəlini yarat (Qalıq qəpiklər sonuncu aya düzəliş edilir)
+            decimal accumulated = 0m;
             for (int i = 1; i <= loan.TermMonths; i++)
             {
+                decimal currentPaymentAmount;
+                if (i == loan.TermMonths)
+                {
+                    // Sonuncu ay: Qalıq uyğunsuzluq olmasın deyə dəqiq fərq götürülür
+                    currentPaymentAmount = loan.TotalPayable - accumulated;
+                }
+                else
+                {
+                    currentPaymentAmount = loan.MonthlyPayment;
+                    accumulated += currentPaymentAmount;
+                }
+
                 _context.LoanPayments.Add(new LoanPayment
                 {
                     LoanId = loan.Id,
                     PaymentNumber = i,
                     DueDate = loan.StartDate.Value.AddMonths(i),
-                    Amount = loan.MonthlyPayment,
+                    Amount = currentPaymentAmount,
                     IsPaid = false
                 });
             }
@@ -159,7 +173,11 @@ public class LoanService : ILoanService
             throw;
         }
 
-        var updated = await _context.Loans.Include(l => l.Payments).FirstAsync(l => l.Id == loanId);
+        var updated = await _context.Loans
+            .AsNoTracking()
+            .Include(l => l.Payments)
+            .FirstAsync(l => l.Id == loanId);
+
         return _mapper.Map<LoanDto>(updated);
     }
 
@@ -176,11 +194,12 @@ public class LoanService : ILoanService
         return _mapper.Map<LoanDto>(loan);
     }
 
+    // Hangfire Cron Job üçün optimizasiya olunmuş avtomatik tutulma metodu
     public async Task ProcessDuePaymentsAsync()
     {
         var now = DateTime.UtcNow;
 
-        // vaxti catmis, odenilmemis odenisler (aktiv kreditler)
+        // Vaxtı çatmış və ödənilməmiş ödənişlər (Aktiv kreditlər)
         var duePayments = await _context.LoanPayments
             .Include(p => p.Loan)
                 .ThenInclude(l => l.Account)
@@ -190,18 +209,20 @@ public class LoanService : ILoanService
             .OrderBy(p => p.DueDate)
             .ToListAsync();
 
+        if (!duePayments.Any()) return;
+
         foreach (var payment in duePayments)
         {
             var loan = payment.Loan;
             var account = loan.Account;
 
-            // balans kifayet etmirse bu defe kec (novbeti dovrde yeniden cehd)
+            // Balans kifayət etmirsə bu ödənişi keç (Növbəti gün yenidən cəhd olunacaq)
             if (account.Balance < payment.Amount)
                 continue;
 
-            await using var tx = await _context.Database.BeginTransactionAsync();
             try
             {
+                // Məbləğlər yenilənir
                 account.Balance -= payment.Amount;
                 payment.IsPaid = true;
                 payment.PaidAt = now;
@@ -213,20 +234,24 @@ public class LoanService : ILoanService
                     Type = TransactionType.Withdraw,
                     Status = TransactionStatus.Completed,
                     FromAccountId = account.Id,
-                    Description = $"Kredit odenisi #{payment.PaymentNumber}"
+                    Description = $"Avtomatik kredit ödənişi #{payment.PaymentNumber}"
                 });
 
-                // butun borc bitibse kredit baglanir
-                if (loan.RemainingBalance <= 0)
+                // Əgər qalıq borc tam sıfırlanıbsa kredit bağlanır
+                if (loan.RemainingBalance <= 0.01m)
+                {
+                    loan.RemainingBalance = 0m;
                     loan.Status = LoanStatus.Completed;
-
-                await _context.SaveChangesAsync();
-                await tx.CommitAsync();
+                }
             }
             catch
             {
-                await tx.RollbackAsync();
+                // Fərdi xətalar ümumi dövrəni qırmır
+                continue;
             }
         }
+
+        // Bütün uğurlu tutulmaları tək bir verilənlər bazası sorğusunda təsdiqləyirik
+        await _context.SaveChangesAsync();
     }
 }
